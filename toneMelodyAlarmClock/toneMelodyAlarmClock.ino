@@ -29,7 +29,7 @@ int noteDurations[] = {
 };
 
 const long TIME_UNTIL_WAKEUP = 65375000L;
-const int STARTING_WEEKDAY = SUNDAY;
+const int STARTING_WEEKDAY = MONDAY;
 
 const int COUNT_WEEKEND_DAYS = 2;
 const int WEEKEND_DAYS[COUNT_WEEKEND_DAYS] = {SATURDAY, SUNDAY};
