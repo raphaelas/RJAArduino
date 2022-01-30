@@ -1,3 +1,7 @@
+const long TIME_UNTIL_WAKEUP = 60515000L;
+#include "weekdays.h"
+const int STARTING_WEEKDAY = MONDAY;
+// #### ABOVE THIS LINE ARE THE TWO CONSTANTS TO SET ####
 /*
   Melody alarm clock
 
@@ -16,7 +20,6 @@
 */
 
 #include "pitches.h"
-#include "weekdays.h"
 
 // notes in the melody:
 int melody[] = {
@@ -27,9 +30,6 @@ int melody[] = {
 int noteDurations[] = {
   4, 8, 8, 4, 4, 4, 4, 4
 };
-
-const long TIME_UNTIL_WAKEUP = 65207000L;
-const int STARTING_WEEKDAY = MONDAY;
 
 const int COUNT_WEEKEND_DAYS = 2;
 const int WEEKEND_DAYS[COUNT_WEEKEND_DAYS] = {SATURDAY, SUNDAY};
@@ -49,7 +49,8 @@ const int KEEP_PORTABLE_BATTERY_ALIVE_COOLDOWN = 16025;
 const int BRIEF_MOMENT = 50, NOWISH = BRIEF_MOMENT;
 
 int switchState = 0;
-bool stopPlaying = false;
+bool keepSoundingAlarmClock = true;
+bool shouldBlinkTheLight = true;
 
 void setUpSerialMonitor() {
   Serial.begin(9600);
@@ -64,19 +65,23 @@ void setup() {
   pinMode(STOP_ALARM_SWITCH, INPUT);
 }
 
-void keepPortableArduinoBatteryOn() {
-  unsigned long currentMillisWithinBatteryKeepAliveCooldown = millis() % KEEP_PORTABLE_BATTERY_ALIVE_COOLDOWN;
-  if (currentMillisWithinBatteryKeepAliveCooldown < NOWISH) {
+void blinkTheLight() {
     digitalWrite(KEEP_BATTERY_ALIVE_LED, HIGH);
     delay(BRIEF_MOMENT);
     digitalWrite(KEEP_BATTERY_ALIVE_LED, LOW);
+}
+
+void keepPortableArduinoBatteryOn() {
+  unsigned long currentMillisWithinBatteryKeepAliveCooldown = millis() % KEEP_PORTABLE_BATTERY_ALIVE_COOLDOWN;
+  if (currentMillisWithinBatteryKeepAliveCooldown < NOWISH) {
+    blinkTheLight();
   }
 }
 
 void checkStopAlarmSwitchState() {
   switchState = digitalRead(STOP_ALARM_SWITCH);
   if (switchState == HIGH) {
-    stopPlaying = true;
+    keepSoundingAlarmClock = false;
   }
 }
 
@@ -96,16 +101,20 @@ void splitDelayToCheckForStopPress(int delayAmount) {
   }
 }
 
+bool isTimeToSoundAlarm(long currentMillisWithinDay, int currentDayOfWeek) {
+  return currentMillisWithinDay >= TIME_UNTIL_WAKEUP && currentMillisWithinDay < ONE_MINUTE_AFTER_WAKEUP
+      && !dayIsWeekendDay(currentDayOfWeek);
+}
+
 void loop() {
   unsigned long currentMillisWithinDay = millis() % ONE_DAY;
   int currentDayOfWeek = STARTING_WEEKDAY + ((millis() / ONE_DAY) & DAYS_IN_WEEK);
   keepPortableArduinoBatteryOn();
-  if (currentMillisWithinDay >= TIME_UNTIL_WAKEUP && currentMillisWithinDay < ONE_MINUTE_AFTER_WAKEUP
-      && !dayIsWeekendDay(currentDayOfWeek)) {
+  if (isTimeToSoundAlarm(currentMillisWithinDay, currentDayOfWeek) && keepSoundingAlarmClock) {
     // iterate over the notes of the melody:
     for (int thisNote = 0; thisNote < 8; thisNote++) {
       checkStopAlarmSwitchState();
-      if (!stopPlaying) {
+      if (keepSoundingAlarmClock) {
         // to calculate the note duration, take one second divided by the note type.
         //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
         int noteDuration = 1000 / noteDurations[thisNote];
@@ -120,7 +129,11 @@ void loop() {
       }
     }
     splitDelayToCheckForStopPress(DELAY_BETWEEN_REPEATS);
-  } else {
-    stopPlaying = false;
+    if (shouldBlinkTheLight) {
+      blinkTheLight();
+    }
+    shouldBlinkTheLight = !shouldBlinkTheLight;
+  } else if (!isTimeToSoundAlarm(currentMillisWithinDay, currentDayOfWeek)) {
+    keepSoundingAlarmClock = true;
   }
 }
