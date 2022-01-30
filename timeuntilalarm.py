@@ -12,6 +12,6 @@ elif tomorrow.weekday() == 6:
 tomorrowDay = tomorrow.day
 tomorrowMonth = tomorrow.month
 tomorrowYear = tomorrow.year
-timeUntilNextWakeup = datetime(tomorrowYear, tomorrowMonth, tomorrowDay, 7, 58, 0) - datetime.now()
-millisecondsUntilNextWakeup = timeUntilNextWakeup.seconds * 1000
+timeUntilNextWakeup = datetime(tomorrowYear, tomorrowMonth, tomorrowDay, 7, 58, 0) - now
+millisecondsUntilNextWakeup = timeUntilNextWakeup.total_seconds() * 1000
 pyperclip.copy(str(millisecondsUntilNextWakeup) + "L")
