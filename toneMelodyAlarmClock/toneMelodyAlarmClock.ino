@@ -28,7 +28,7 @@ int noteDurations[] = {
   4, 8, 8, 4, 4, 4, 4, 4
 };
 
-const long TIME_UNTIL_WAKEUP = 65375000L;
+const long TIME_UNTIL_WAKEUP = 65207000L;
 const int STARTING_WEEKDAY = MONDAY;
 
 const int COUNT_WEEKEND_DAYS = 2;
@@ -45,7 +45,7 @@ const int DELAY_DIVISOR = 10;
 const int KEEP_BATTERY_ALIVE_LED = 13;
 const int STOP_ALARM_SWITCH = 2;
 
-const int KEEP_PORTABLE_BATTERY_ALIVE_COOLDOWN = 16000;
+const int KEEP_PORTABLE_BATTERY_ALIVE_COOLDOWN = 16025;
 const int BRIEF_MOMENT = 50, NOWISH = BRIEF_MOMENT;
 
 int switchState = 0;
