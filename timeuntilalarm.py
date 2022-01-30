@@ -13,5 +13,5 @@ tomorrowDay = tomorrow.day
 tomorrowMonth = tomorrow.month
 tomorrowYear = tomorrow.year
 timeUntilNextWakeup = datetime(tomorrowYear, tomorrowMonth, tomorrowDay, 7, 58, 0) - now
-millisecondsUntilNextWakeup = timeUntilNextWakeup.total_seconds() * 1000
+millisecondsUntilNextWakeup = int(timeUntilNextWakeup.total_seconds()) * 1000
 pyperclip.copy(str(millisecondsUntilNextWakeup) + "L")
