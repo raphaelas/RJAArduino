@@ -7,6 +7,7 @@ SoftwareSerial mySerial(10, 11); // RX, TX
 const long ONE_MINUTE = 60000L;
 const int ONE_SECOND = 1000;
 const long ONE_DAY = 86400000L;
+const long THREE_DAYS = 259200000L;
 
 const int COUNT_WEEKEND_DAYS = 2;
 const int WEEKEND_DAYS[COUNT_WEEKEND_DAYS] = {SATURDAY, SUNDAY};
@@ -15,21 +16,27 @@ const int DAYS_IN_WEEK = 7;
 const int DELAY_BETWEEN_REPEATS = 500, DELAY_BETWEEN_SWITCH_LISTENS = DELAY_BETWEEN_REPEATS;
 const int DELAY_DIVISOR = 10;
 
-const int KEEP_BATTERY_ALIVE_LED = 6;
-const int TIME_OR_DAY_IS_BEING_SET_LED = 7;
 const int STOP_ALARM_SWITCH = 2;
 const int UPDATE_TIME_SWITCH = 3;
 const int UPDATE_DAY_SWITCH = 4;
 
-const int KEEP_PORTABLE_BATTERY_ALIVE_COOLDOWN = 14999;
+const int KEEP_BATTERY_ALIVE_LED = 5;
+const int TIME_OR_DAY_IS_BEING_SET_LED = 6;
+const int BATTERY_IS_LOW_LED = 7;
+
+const int KEEP_PORTABLE_BATTERY_ALIVE_COOLDOWN = 14000;
 const int BRIEF_MOMENT = 50, NOWISH = BRIEF_MOMENT;
 
 const long STARTER_WAKEUP_TIME = 180000L;
 const int STARTER_STARTING_DAY = TUESDAY;
+
 long timeUntilWakeup;
 long oneMinuteAfterWakeup;
+
 int startingDay;
 int serialDayIn;
+
+long timeLeftForBattery;
 
 int melody[] = {
   NOTE_C4, NOTE_G3, NOTE_G3, NOTE_A3, NOTE_G3, 0, NOTE_B3, NOTE_C4
@@ -49,6 +56,7 @@ int MAX_COUNTDOWN = 4, countdownBlinkLightWhileAlarmSounding = MAX_COUNTDOWN;
 void setup() {
   pinMode(KEEP_BATTERY_ALIVE_LED, OUTPUT);
   pinMode(TIME_OR_DAY_IS_BEING_SET_LED, OUTPUT);
+  pinMode(BATTERY_IS_LOW_LED, OUTPUT);
   pinMode(STOP_ALARM_SWITCH, INPUT);
   pinMode(UPDATE_TIME_SWITCH, INPUT);
   pinMode(UPDATE_DAY_SWITCH, INPUT);
@@ -59,14 +67,9 @@ void setup() {
   startingDay = STARTER_STARTING_DAY;
 }
 
-void setWakeupTimeVariables(long theTimeUntilWakeup) {
-  timeUntilWakeup = theTimeUntilWakeup;
-  oneMinuteAfterWakeup = theTimeUntilWakeup + ONE_MINUTE;
-}
-
 void loop() {
   unsigned long currentMillisWithinDay = millis() % ONE_DAY;
-  int currentDayOfWeek = (startingDay + (millis() / ONE_DAY)) % DAYS_IN_WEEK;
+  int currentDayOfWeek = calculateDayOfWeek();
   keepPortableArduinoBatteryOn();
   listenToUpdateTimeSwitch();
   listenToUpdateDaySwitch();
@@ -93,9 +96,20 @@ void playMelodyNote(int note) {
   noTone(8);
 }
 
+void setWakeupTimeVariables(long theTimeUntilWakeup) {
+  timeUntilWakeup = theTimeUntilWakeup;
+  oneMinuteAfterWakeup = theTimeUntilWakeup + ONE_MINUTE;
+}
+
+int calculateDayOfWeek() {
+  int mathUsableStartingDay = startingDay - 1;
+  int startingDayMinusOne = (mathUsableStartingDay + (millis() / ONE_DAY)) % DAYS_IN_WEEK;
+  return startingDayMinusOne + 1;
+}
+
 void keepPortableArduinoBatteryOnWhileAlarmSounding() {
   if (countdownBlinkLightWhileAlarmSounding == 0) {
-    blinkLight(KEEP_BATTERY_ALIVE_LED);
+    blinkLight(determineCorrectIndicatorLight());
     countdownBlinkLightWhileAlarmSounding = MAX_COUNTDOWN;
   } else {
     countdownBlinkLightWhileAlarmSounding--;
@@ -111,7 +125,7 @@ void blinkLight(int lightNumber) {
 void keepPortableArduinoBatteryOn() {
   unsigned long currentMillisWithinBatteryKeepAliveCooldown = millis() % KEEP_PORTABLE_BATTERY_ALIVE_COOLDOWN;
   if (currentMillisWithinBatteryKeepAliveCooldown < NOWISH) {
-    blinkLight(KEEP_BATTERY_ALIVE_LED);
+    blinkLight(determineCorrectIndicatorLight());
   }
 }
 
@@ -119,8 +133,17 @@ void checkStopAlarmSwitchState() {
   stopAlarmSwitchState = digitalRead(STOP_ALARM_SWITCH);
   if (stopAlarmSwitchState == HIGH) {
     keepSoundingAlarmClock = false;
-    blinkLight(KEEP_BATTERY_ALIVE_LED);
+    blinkLight(determineCorrectIndicatorLight());
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
+  }
+}
+
+int determineCorrectIndicatorLight() {
+  timeLeftForBattery = THREE_DAYS - millis();
+  if (timeLeftForBattery > 0) {
+    return KEEP_BATTERY_ALIVE_LED;
+  } else {
+    return BATTERY_IS_LOW_LED;
   }
 }
 

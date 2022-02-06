@@ -83,6 +83,7 @@ void writeNewDayToFile() {
         alarmDayFile.println(newDay);
         Serial.println(newDay);
         daySet = true;
+        Serial.println("Arduino MKR is now ready to set Arduino Uno time variables.");
       }
     }
     alarmDayFile.close();
