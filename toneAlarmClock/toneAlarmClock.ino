@@ -38,7 +38,7 @@ int serialDayIn;
 
 long timeLeftForBattery;
 
-int melody[] = {
+int selectedNotes[] = {
   NOTE_C4, NOTE_G3, NOTE_G3, NOTE_A3, NOTE_G3, 0, NOTE_B3, NOTE_C4
 };
 int noteDurations[] = {
@@ -77,7 +77,7 @@ void loop() {
     for (int note = 0; note < NOTE_COUNT; note++) {
       checkStopAlarmSwitchState();
       if (keepSoundingAlarmClock) {
-        playMelodyNote(note);
+        playNote(note);
       }
     }
     splitDelayToCheckForSwitchPress(DELAY_BETWEEN_REPEATS);
@@ -88,9 +88,9 @@ void loop() {
   }
 }
 
-void playMelodyNote(int note) {
+void playNote(int note) {
   int noteDuration = ONE_SECOND / noteDurations[note];
-  tone(8, melody[note], noteDuration);
+  tone(8, selectedNotes[note], noteDuration);
   int pauseBetweenNotes = noteDuration * RECOMMENDED_NOTE_PAUSE_MULTIPLIER;
   splitDelayToCheckForSwitchPress(pauseBetweenNotes);
   noTone(8);

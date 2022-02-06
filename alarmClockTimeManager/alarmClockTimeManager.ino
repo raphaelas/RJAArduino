@@ -71,7 +71,7 @@ void writeNewTimeToFile() {
 
 void writeNewDayToFile() {
   if (!promptedForDay && !SD.exists(alarmDayFileName)) {
-    Serial.println("Enter a day of week integer from toneMelodyAlarmClock/weekdays.h. This");
+    Serial.println("Enter a day of week integer from toneAlarmClock/weekdays.h. This");
     Serial.println("should be i.e. the day of the the next 8:00 AM occurrence.");
     promptedForDay = true;
   }
