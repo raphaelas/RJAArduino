@@ -2,9 +2,27 @@
 #include <SD.h>
 
 const int chipSelect = 4;
-String fileName = "alarmset.txt";
+const int FILE_COUNT = 2;
+const String FILES[FILE_COUNT] = {"alarmset.txt", "alarmday.txt"};
 
-void printTheFileBeforeDeletingIt() {
+void setup() {
+  setUpSerialMonitor();
+  initializeSdCard();
+  for (int file = 0; file < FILE_COUNT; file++) {
+    String fileName = FILES[file];
+    if (SD.exists(fileName)) {
+      Serial.println(fileName + " exists.");
+      printTheFileBeforeDeletingIt(fileName);
+      removeTheFile(fileName);
+    } else {
+      Serial.println(fileName + " does not exist.");
+    }
+  }
+}
+
+void loop() {}
+
+void printTheFileBeforeDeletingIt(String fileName) {
   File dataFile = SD.open(fileName);
   if (dataFile) {
     while (dataFile.available()) {
@@ -17,7 +35,7 @@ void printTheFileBeforeDeletingIt() {
   }
 }
 
-void removeTheFile() {
+void removeTheFile(String fileName) {
   bool removalResult = SD.remove(fileName);
   Serial.println("Removal result: ");
   Serial.println(removalResult);    
@@ -27,12 +45,10 @@ void removeTheFile() {
 }
 
 void initializeSdCard() {
-  Serial.print("Initializing SD card...");
   if (!SD.begin(chipSelect)) {
     Serial.println("Card failed, or not present");
     while (1);
   }
-  Serial.println("card initialized.");
 }
 
 void setUpSerialMonitor() {
@@ -41,17 +57,3 @@ void setUpSerialMonitor() {
     ;
   }
 }
-
-void setup() {
-  setUpSerialMonitor();
-  initializeSdCard();
-  if (SD.exists(fileName)) {
-    Serial.println(fileName + " exists.");
-    printTheFileBeforeDeletingIt();
-    removeTheFile();
-  } else {
-    Serial.println(fileName + " does not exist.");
-  }
-}
-
-void loop() {}
