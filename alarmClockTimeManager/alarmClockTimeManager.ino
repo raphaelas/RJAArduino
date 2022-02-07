@@ -34,17 +34,6 @@ void loop() {
     writeNewDayToFile();
   }
   listenForTriggerFromOtherArduino();
-//  if (alreadySentTimeToSerial1 && alreadySentDayToSerial1) {
-//  }
-//  if (!recentlySentSomething) {
-//    listenForTriggerFromOtherArduino();
-//  } else if (countdown > 0) {
-//    countdown--;
-//  } else {
-//    Serial.println("countdown over");
-//    recentlySentSomething = false;
-//    countdown = 30000;
-//  }
   if (!alreadySentTimeToSerial1) {
     sendTimeToOtherArduino();
   } else if (!alreadySentDayToSerial1) {

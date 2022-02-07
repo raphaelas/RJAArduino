@@ -16,8 +16,7 @@ const int COUNT_WEEKEND_DAYS = 2;
 const int WEEKEND_DAYS[] = {SATURDAY, SUNDAY};
 const int DAYS_IN_WEEK = 7;
 
-const int DELAY_BETWEEN_REPEATS = 500;
-const int DELAY_BETWEEN_SWITCH_LISTENS = 500;
+const int DELAY_BETWEEN_REPEATS = 500, DELAY_BETWEEN_SWITCH_LISTENS = DELAY_BETWEEN_REPEATS;
 const int DELAY_DIVISOR = 10;
 
 const int STOP_ALARM_SWITCH = A3;
@@ -31,7 +30,7 @@ const int BATTERY_IS_LOW_LED = 9;
 const int RX_PIN = 10;
 const int TX_PIN = 11;
 
-SoftwareSerial mySerial(RX_PIN, TX_PIN);
+SoftwareSerial softwareSerial(RX_PIN, TX_PIN);
 LiquidCrystal lcd(13, 12, 5, 4, 3, 2);
 
 const int KEEP_PORTABLE_BATTERY_ALIVE_COOLDOWN = 14500;
@@ -264,7 +263,7 @@ void setup() {
   pinMode(BATTERY_CHARGED_SWITCH, INPUT);
   pinMode(UPDATE_TIME_SWITCH, INPUT);
   pinMode(UPDATE_DAY_SWITCH, INPUT);
-  mySerial.begin(38400);
+  softwareSerial.begin(38400);
   setWakeupTimeVariables(STARTER_WAKEUP_TIME);
   startingDay = STARTER_STARTING_DAY;
   playStartUpNotes();
@@ -382,10 +381,10 @@ void listenToUpdateTimeSwitch() {
   updateTimeSwitchState = digitalRead(UPDATE_TIME_SWITCH);
   if (updateTimeSwitchState == HIGH) {
     recentRequest = 1;
-    mySerial.write("timeplease");
+    softwareSerial.write("timeplease");
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
     if (recentRequest == 1) {
-      serialTimeIn = mySerial.parseInt();
+      serialTimeIn = softwareSerial.parseInt();
       if (serialTimeIn > 0) {
         setWakeupTimeVariables(serialTimeIn);
         blinkLight(TIME_OR_DAY_OR_BATTERY_CHARGED_IS_BEING_SET_LED);
@@ -401,11 +400,11 @@ void listenToUpdateDaySwitch() {
   updateDaySwitchState = digitalRead(UPDATE_DAY_SWITCH);
   if (updateDaySwitchState == HIGH) {
     recentRequest = 2;
-    mySerial.write("dayplease");
+    softwareSerial.write("dayplease");
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
     if (recentRequest == 2) {
-      serialDayIn = mySerial.parseInt();
-      mySerial.write(serialDayIn);
+      serialDayIn = softwareSerial.parseInt();
+      softwareSerial.write(serialDayIn);
       if (serialDayIn > 0) {
         startingDay = serialDayIn;
         blinkLight(TIME_OR_DAY_OR_BATTERY_CHARGED_IS_BEING_SET_LED);
@@ -511,10 +510,11 @@ void writeTimeLeftUntilAlarmToLcd() {
   int minutesCursor;
   if (hoursLeftUntilAlarm > 0) {
     lcd.print(hoursLeftUntilAlarm);
-    writeShahot(12, hoursLeftUntilAlarm == 1);
-    lcd.setCursor(6, 0);
+    bool singularHours = (hoursLeftUntilAlarm == 1);
+    writeShahot(12, singularHours);
+    lcd.setCursor(6 + singularHours, 0);
     lcd.print(minutesLeftUntilAlarm);
-    writeDakot(4, minutesLeftUntilAlarm == 1);
+    writeDakot(4 + singularHours, minutesLeftUntilAlarm == 1);
   } else {
     lcd.print(minutesLeftUntilAlarm);
     writeDakot(12, minutesLeftUntilAlarm == 1);
