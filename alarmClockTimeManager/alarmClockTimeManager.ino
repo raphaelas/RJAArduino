@@ -136,7 +136,6 @@ void sendDayToOtherArduino() {
 
 void listenForTriggerFromOtherArduino() {
   if (Serial1.available()) {
-    Serial.println("we are available");
     String shouldGo = Serial1.readString();
     Serial.println(shouldGo);
     if (shouldGo.equals("timeplease")) {
