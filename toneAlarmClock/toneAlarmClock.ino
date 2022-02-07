@@ -3,7 +3,7 @@
 #include "notedurations.h"
 #include "hebrewcharacters.h"
 #include <SoftwareSerial.h>
-//#include <LiquidCrystal.h>
+#include <LiquidCrystal.h>
 
 const int ONE_SECOND = 1000;
 const int SECONDS_IN_MINUTE = 60, MINUTES_IN_HOUR = SECONDS_IN_MINUTE;
@@ -17,7 +17,7 @@ const int WEEKEND_DAYS[] = {SATURDAY, SUNDAY};
 const int DAYS_IN_WEEK = 7;
 
 const int DELAY_BETWEEN_REPEATS = 500;
-const int DELAY_BETWEEN_SWITCH_LISTENS = 750;
+const int DELAY_BETWEEN_SWITCH_LISTENS = 500;
 const int DELAY_DIVISOR = 10;
 
 const int STOP_ALARM_SWITCH = A3;
@@ -32,7 +32,7 @@ const int RX_PIN = 10;
 const int TX_PIN = 11;
 
 SoftwareSerial mySerial(RX_PIN, TX_PIN);
-//LiquidCrystal lcd(13, 12, 5, 4, 3, 2);
+LiquidCrystal lcd(13, 12, 5, 4, 3, 2);
 
 const int KEEP_PORTABLE_BATTERY_ALIVE_COOLDOWN = 14500;
 const int BRIEF_MOMENT = 50, NOWISH = BRIEF_MOMENT;
@@ -387,14 +387,12 @@ void listenToUpdateTimeSwitch() {
     if (recentRequest == 1) {
       serialTimeIn = mySerial.parseInt();
       if (serialTimeIn > 0) {
-//        lcd.print(serialTimeIn);
         setWakeupTimeVariables(serialTimeIn);
         blinkLight(TIME_OR_DAY_OR_BATTERY_CHARGED_IS_BEING_SET_LED);
         keepSoundingAlarmClock = true;
+        writeTimeLeftUntilAlarmToLcd();
         recentRequest = 0;
       }
-    } else {
-      mySerial.println("not available");
     }
   }
 }
@@ -412,6 +410,8 @@ void listenToUpdateDaySwitch() {
         startingDay = serialDayIn;
         blinkLight(TIME_OR_DAY_OR_BATTERY_CHARGED_IS_BEING_SET_LED);
         keepSoundingAlarmClock = true;
+        writeTimeLeftUntilAlarmToLcd();
+        recentRequest = 0;
       }
     }
   }
@@ -447,39 +447,39 @@ bool isTimeToSoundAlarm(long currentMillisWithinDay, int currentDayOfWeek) {
 void createLcdSpecialCharactersForBokerTov() {
   int newCharacters[] = {BET, VAV, KUF, RESH, TET, FEY, ALEPH, LAMED};
   overwriteRelevantCharactersList(newCharacters);
-//  lcd.createChar(getCharacter(BET), bet);
-//  lcd.createChar(getCharacter(VAV), vav);
-//  lcd.createChar(getCharacter(KUF), kuf);
-//  lcd.createChar(getCharacter(RESH), resh);
-//  lcd.createChar(getCharacter(TET), tet);
-//  lcd.createChar(getCharacter(FEY), fey);
-//  lcd.createChar(getCharacter(ALEPH), aleph);
-//  lcd.createChar(getCharacter(LAMED), lamed);
+  lcd.createChar(getCharacter(BET), bet);
+  lcd.createChar(getCharacter(VAV), vav);
+  lcd.createChar(getCharacter(KUF), kuf);
+  lcd.createChar(getCharacter(RESH), resh);
+  lcd.createChar(getCharacter(TET), tet);
+  lcd.createChar(getCharacter(FEY), fey);
+  lcd.createChar(getCharacter(ALEPH), aleph);
+  lcd.createChar(getCharacter(LAMED), lamed);
 }
 
 void createLcdSpecialCharactersForSofShavuahTov() {
   int newCharacters[] = {BET, VAV, TET, SHIN, SAMECH, FEYSOFIT, AYIN, 0};
   overwriteRelevantCharactersList(newCharacters);
-//  lcd.createChar(getCharacter(BET), bet);
-//  lcd.createChar(getCharacter(VAV), vav);
-//  lcd.createChar(getCharacter(TET), tet);
-//  lcd.createChar(getCharacter(SHIN), shin);
-//  lcd.createChar(getCharacter(SAMECH), samech);
-//  lcd.createChar(getCharacter(FEYSOFIT), feysofit);
-//  lcd.createChar(getCharacter(AYIN), ayin);
+  lcd.createChar(getCharacter(BET), bet);
+  lcd.createChar(getCharacter(VAV), vav);
+  lcd.createChar(getCharacter(TET), tet);
+  lcd.createChar(getCharacter(SHIN), shin);
+  lcd.createChar(getCharacter(SAMECH), samech);
+  lcd.createChar(getCharacter(FEYSOFIT), feysofit);
+  lcd.createChar(getCharacter(AYIN), ayin);
 }
 
 void createLcdSpecialCharactersForTimeUntilAlarm() {
   int newCharacters[] = {VAV, KUF, TET, SHIN, AYIN, TAF, DALET, HEY};
   overwriteRelevantCharactersList(newCharacters);
-//  lcd.createChar(getCharacter(VAV), vav);
-//  lcd.createChar(getCharacter(KUF), kuf);
-//  lcd.createChar(getCharacter(TET), tet);
-//  lcd.createChar(getCharacter(SHIN), shin);
-//  lcd.createChar(getCharacter(AYIN), ayin);
-//  lcd.createChar(getCharacter(TAF), taf);
-//  lcd.createChar(getCharacter(DALET), dalet);
-//  lcd.createChar(getCharacter(HEY), hey);
+  lcd.createChar(getCharacter(VAV), vav);
+  lcd.createChar(getCharacter(KUF), kuf);
+  lcd.createChar(getCharacter(TET), tet);
+  lcd.createChar(getCharacter(SHIN), shin);
+  lcd.createChar(getCharacter(AYIN), ayin);
+  lcd.createChar(getCharacter(TAF), taf);
+  lcd.createChar(getCharacter(DALET), dalet);
+  lcd.createChar(getCharacter(HEY), hey);
 }
 
 void overwriteRelevantCharactersList(int newCharacters[]) {
@@ -505,122 +505,122 @@ void writeTimeLeftUntilAlarmToLcd() {
   }
   int hoursLeftUntilAlarm = millisecondsUntilWakeup / ONE_HOUR;
   int minutesLeftUntilAlarm = (millisecondsUntilWakeup / ONE_MINUTE) % MINUTES_IN_HOUR;
-//  lcd.begin(16, 2);
-//  lcd.clear();
-//  lcd.setCursor(14, 0);
-//  int minutesCursor;
-//  if (hoursLeftUntilAlarm > 0) {
-//    lcd.print(hoursLeftUntilAlarm);
-//    writeShahot(12, hoursLeftUntilAlarm == 1);
-//    lcd.setCursor(6, 0);
-//    lcd.print(minutesLeftUntilAlarm);
-//    writeDakot(4, minutesLeftUntilAlarm == 1);
-//  } else {
-//    lcd.print(minutesLeftUntilAlarm);
-//    writeDakot(12, minutesLeftUntilAlarm == 1);
-//  }
+  lcd.begin(16, 2);
+  lcd.clear();
+  lcd.setCursor(14, 0);
+  int minutesCursor;
+  if (hoursLeftUntilAlarm > 0) {
+    lcd.print(hoursLeftUntilAlarm);
+    writeShahot(12, hoursLeftUntilAlarm == 1);
+    lcd.setCursor(6, 0);
+    lcd.print(minutesLeftUntilAlarm);
+    writeDakot(4, minutesLeftUntilAlarm == 1);
+  } else {
+    lcd.print(minutesLeftUntilAlarm);
+    writeDakot(12, minutesLeftUntilAlarm == 1);
+  }
   hasWrittenTimeUntilAlarmRecently = true;
 }
 
 void writeShahot(int startingCursor, bool singular) {
-//  lcd.setCursor(startingCursor, 0);
-//  lcd.write(getCharacter(SHIN));
-//  lcd.setCursor(startingCursor - 1, 0);
-//  lcd.write(getCharacter(AYIN));
-//  if (singular) {
-//    writeHey(startingCursor - 2);
-//  } else {
-//    lcd.setCursor(startingCursor - 2, 0);
-//    lcd.write(getCharacter(VAV));
-//    lcd.setCursor(startingCursor - 3, 0);
-//    lcd.write(getCharacter(TAF));   
-//  }
+  lcd.setCursor(startingCursor, 0);
+  lcd.write(getCharacter(SHIN));
+  lcd.setCursor(startingCursor - 1, 0);
+  lcd.write(getCharacter(AYIN));
+  if (singular) {
+    writeHey(startingCursor - 2);
+  } else {
+    lcd.setCursor(startingCursor - 2, 0);
+    lcd.write(getCharacter(VAV));
+    lcd.setCursor(startingCursor - 3, 0);
+    lcd.write(getCharacter(TAF));   
+  }
 }
 
 void writeDakot(int startingCursor, bool singular) {
-//  lcd.setCursor(startingCursor, 0);
-//  lcd.write(getCharacter(DALET));
-//  lcd.setCursor(startingCursor - 1, 0);
-//  lcd.write(getCharacter(KUF));
-//  if (singular) {
-//    writeHey(startingCursor - 2);
-//  } else {
-//    lcd.setCursor(startingCursor - 2, 0);
-//    lcd.write(getCharacter(VAV));
-//    lcd.setCursor(startingCursor - 3, 0);
-//    lcd.write(getCharacter(TAF));    
-//  }
+  lcd.setCursor(startingCursor, 0);
+  lcd.write(getCharacter(DALET));
+  lcd.setCursor(startingCursor - 1, 0);
+  lcd.write(getCharacter(KUF));
+  if (singular) {
+    writeHey(startingCursor - 2);
+  } else {
+    lcd.setCursor(startingCursor - 2, 0);
+    lcd.write(getCharacter(VAV));
+    lcd.setCursor(startingCursor - 3, 0);
+    lcd.write(getCharacter(TAF));    
+  }
 }
 
 void writeHey(int startingCursor) {
-//  lcd.setCursor(startingCursor, 0);
-//  lcd.write(getCharacter(HEY));
+  lcd.setCursor(startingCursor, 0);
+  lcd.write(getCharacter(HEY));
 }
 
 void writeBokerTov() {
-//  createLcdSpecialCharactersForBokerTov();
-//  lcd.begin(16, 2);
-//  lcd.clear();
-//  lcd.setCursor(15, 0);
-//  lcd.write(getCharacter(BET));
-//  lcd.setCursor(14, 0);
-//  lcd.write(getCharacter(VAV));
-//  lcd.setCursor(13, 0);
-//  lcd.write(getCharacter(KUF));
-//  lcd.setCursor(12, 0);
-//  lcd.write(getCharacter(RESH));
-//  lcd.setCursor(10, 0);
-//  lcd.write(getCharacter(TET));
-//  lcd.setCursor(9, 0);
-//  lcd.write(getCharacter(VAV));
-//  lcd.setCursor(8, 0);
-//  lcd.write(getCharacter(BET));
-//  lcd.setCursor(6, 0);
-//  lcd.write(getCharacter(RESH));
-//  lcd.setCursor(5, 0);
-//  lcd.write(getCharacter(FEY));
-//  lcd.setCursor(4, 0);
-//  lcd.write(getCharacter(ALEPH));
-//  lcd.setCursor(3, 0);
-//  lcd.write(getCharacter(LAMED));
+  createLcdSpecialCharactersForBokerTov();
+  lcd.begin(16, 2);
+  lcd.clear();
+  lcd.setCursor(15, 0);
+  lcd.write(getCharacter(BET));
+  lcd.setCursor(14, 0);
+  lcd.write(getCharacter(VAV));
+  lcd.setCursor(13, 0);
+  lcd.write(getCharacter(KUF));
+  lcd.setCursor(12, 0);
+  lcd.write(getCharacter(RESH));
+  lcd.setCursor(10, 0);
+  lcd.write(getCharacter(TET));
+  lcd.setCursor(9, 0);
+  lcd.write(getCharacter(VAV));
+  lcd.setCursor(8, 0);
+  lcd.write(getCharacter(BET));
+  lcd.setCursor(6, 0);
+  lcd.write(getCharacter(RESH));
+  lcd.setCursor(5, 0);
+  lcd.write(getCharacter(FEY));
+  lcd.setCursor(4, 0);
+  lcd.write(getCharacter(ALEPH));
+  lcd.setCursor(3, 0);
+  lcd.write(getCharacter(LAMED));
   hasWrittenBokerTov = true;
 }
 
 void writeSofShavuahTov() {
   createLcdSpecialCharactersForSofShavuahTov();
-//  lcd.begin(16, 2);
-//  lcd.clear();
-//  lcd.setCursor(15, 0);
-//  lcd.write(getCharacter(SAMECH));
-//  lcd.setCursor(14, 0);
-//  lcd.write(getCharacter(VAV));
-//  lcd.setCursor(13, 0);
-//  lcd.write(getCharacter(FEYSOFIT));
-//  lcd.setCursor(11, 0);
-//  lcd.write(getCharacter(SHIN));
-//  lcd.setCursor(10, 0);
-//  lcd.write(getCharacter(BET));
-//  lcd.setCursor(9, 0);
-//  lcd.write(getCharacter(VAV));
-//  lcd.setCursor(8, 0);
-//  lcd.write(getCharacter(AYIN));
-//  lcd.setCursor(6, 0);
-//  lcd.write(getCharacter(TET));
-//  lcd.setCursor(5, 0);
-//  lcd.write(getCharacter(VAV));
-//  lcd.setCursor(4, 0);
-//  lcd.write(getCharacter(BET));
+  lcd.begin(16, 2);
+  lcd.clear();
+  lcd.setCursor(15, 0);
+  lcd.write(getCharacter(SAMECH));
+  lcd.setCursor(14, 0);
+  lcd.write(getCharacter(VAV));
+  lcd.setCursor(13, 0);
+  lcd.write(getCharacter(FEYSOFIT));
+  lcd.setCursor(11, 0);
+  lcd.write(getCharacter(SHIN));
+  lcd.setCursor(10, 0);
+  lcd.write(getCharacter(BET));
+  lcd.setCursor(9, 0);
+  lcd.write(getCharacter(VAV));
+  lcd.setCursor(8, 0);
+  lcd.write(getCharacter(AYIN));
+  lcd.setCursor(6, 0);
+  lcd.write(getCharacter(TET));
+  lcd.setCursor(5, 0);
+  lcd.write(getCharacter(VAV));
+  lcd.setCursor(4, 0);
+  lcd.write(getCharacter(BET));
   hasWrittenSofShavuahTov = true;
 }
 
 void scrollLcdMessage() {
-//  for (int positionCounter = 0; positionCounter < MAX_SCROLL_AMOUNT; positionCounter++) {
-//    lcd.scrollDisplayLeft();
-//    splitDelayToCheckForSwitchPress(DELAY_BETWEEN_TEXT_SCROLLS);
-//  }
-//  delay(DELAY_BETWEEN_TEXT_SCROLLS);
-//  for (int positionCounter = 0; positionCounter < MAX_SCROLL_AMOUNT; positionCounter++) {
-//    lcd.scrollDisplayRight();
-//    splitDelayToCheckForSwitchPress(DELAY_BETWEEN_TEXT_SCROLLS);
-//  }
+  for (int positionCounter = 0; positionCounter < MAX_SCROLL_AMOUNT; positionCounter++) {
+    lcd.scrollDisplayLeft();
+    splitDelayToCheckForSwitchPress(DELAY_BETWEEN_TEXT_SCROLLS);
+  }
+  delay(DELAY_BETWEEN_TEXT_SCROLLS);
+  for (int positionCounter = 0; positionCounter < MAX_SCROLL_AMOUNT; positionCounter++) {
+    lcd.scrollDisplayRight();
+    splitDelayToCheckForSwitchPress(DELAY_BETWEEN_TEXT_SCROLLS);
+  }
 }
