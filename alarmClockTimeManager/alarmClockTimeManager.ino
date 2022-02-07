@@ -16,6 +16,10 @@ bool daySet = false;
 bool promptedForTime = false;
 bool promptedForDay = false;
 
+bool recentlySentSomething = false;
+int countdown = 30000;
+byte nextByte;
+
 const int SERIAL_MONITOR_STARTUP_DELAY = 3000;
 
 void setup() {
@@ -30,6 +34,17 @@ void loop() {
     writeNewDayToFile();
   }
   listenForTriggerFromOtherArduino();
+//  if (alreadySentTimeToSerial1 && alreadySentDayToSerial1) {
+//  }
+//  if (!recentlySentSomething) {
+//    listenForTriggerFromOtherArduino();
+//  } else if (countdown > 0) {
+//    countdown--;
+//  } else {
+//    Serial.println("countdown over");
+//    recentlySentSomething = false;
+//    countdown = 30000;
+//  }
   if (!alreadySentTimeToSerial1) {
     sendTimeToOtherArduino();
   } else if (!alreadySentDayToSerial1) {
@@ -95,9 +110,16 @@ void sendTimeToOtherArduino() {
     alarmTimeFile = SD.open(alarmTimeFileName);
     if (alarmTimeFile) {
         while (alarmTimeFile.available()) {
-          Serial1.write(alarmTimeFile.read());
+          nextByte = alarmTimeFile.read();
+          if (isDigit(nextByte)) {
+            Serial1.write(nextByte);
+            Serial.write(nextByte);
+            recentlySentSomething = true;
+          }
         }
+        Serial.println();
         alreadySentTimeToSerial1 = true;
+        delay(3000);
     }
     alarmTimeFile.close();
   }
@@ -108,9 +130,16 @@ void sendDayToOtherArduino() {
     alarmDayFile = SD.open(alarmDayFileName);
     if (alarmDayFile) {
         while (alarmDayFile.available()) {
-          Serial1.write(alarmDayFile.read());
+          nextByte = alarmDayFile.read();
+          if (isDigit(nextByte)) {
+            Serial1.write(nextByte);
+            Serial.write(nextByte);
+            recentlySentSomething = true;
+          }
         }
+        Serial.println();
         alreadySentDayToSerial1 = true;
+        delay(3000);
     }
     alarmDayFile.close();
   }
@@ -118,6 +147,7 @@ void sendDayToOtherArduino() {
 
 void listenForTriggerFromOtherArduino() {
   if (Serial1.available()) {
+    Serial.println("we are available");
     String shouldGo = Serial1.readString();
     Serial.println(shouldGo);
     if (shouldGo.equals("timeplease")) {

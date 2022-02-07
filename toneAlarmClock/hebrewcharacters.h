@@ -1,0 +1,15 @@
+#define BET      1
+#define VAV      2
+#define KUF      3
+#define RESH     4
+#define TET      5
+#define FEY      6
+#define ALEPH    7
+#define LAMED    8
+#define SHIN     9
+#define SAMECH   10
+#define FEYSOFIT 11
+#define AYIN     12
+#define TAF      13
+#define DALET    14
+#define HEY      15
