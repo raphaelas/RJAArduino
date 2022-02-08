@@ -96,6 +96,7 @@ const int MAX_SCROLL_AMOUNT = 3;
 
 const int RELEVANT_CHARACTERS_COUNT = 8;
 int relevantCharacters[RELEVANT_CHARACTERS_COUNT];
+int * relevantCharacters2;
 int recentRequest = 0;
 
 void setup() {
@@ -296,48 +297,52 @@ bool isTimeToSoundAlarm(long currentMillisWithinDay, int currentDayOfWeek) {
          && !dayIsWeekendDay(currentDayOfWeek);
 }
 
-void createLcdSpecialCharactersForBokerTov() {
+LiquidCrystal createLcdSpecialCharactersForBokerTov(LiquidCrystal lcd2) {
   int newCharacters[] = {BET, VAV, KUF, RESH, TET, FEY, ALEPH, LAMED};
-  overwriteRelevantCharactersList(newCharacters);
-  lcd.createChar(getCharacter(BET), bet);
-  lcd.createChar(getCharacter(VAV), vav);
-  lcd.createChar(getCharacter(KUF), kuf);
-  lcd.createChar(getCharacter(RESH), resh);
-  lcd.createChar(getCharacter(TET), tet);
-  lcd.createChar(getCharacter(FEY), fey);
-  lcd.createChar(getCharacter(ALEPH), aleph);
-  lcd.createChar(getCharacter(LAMED), lamed);
+  relevantCharacters2 = overwriteRelevantCharactersList(newCharacters);
+  lcd2.createChar(getCharacter(BET), bet);
+  lcd2.createChar(getCharacter(VAV), vav);
+  lcd2.createChar(getCharacter(KUF), kuf);
+  lcd2.createChar(getCharacter(RESH), resh);
+  lcd2.createChar(getCharacter(TET), tet);
+  lcd2.createChar(getCharacter(FEY), fey);
+  lcd2.createChar(getCharacter(ALEPH), aleph);
+  lcd2.createChar(getCharacter(LAMED), lamed);
+  return lcd2;
 }
 
-void createLcdSpecialCharactersForSofShavuahTov() {
+LiquidCrystal createLcdSpecialCharactersForSofShavuahTov(LiquidCrystal lcd2) {
   int newCharacters[] = {BET, VAV, TET, SHIN, SAMECH, FEYSOFIT, AYIN, 0};
-  overwriteRelevantCharactersList(newCharacters);
-  lcd.createChar(getCharacter(BET), bet);
-  lcd.createChar(getCharacter(VAV), vav);
-  lcd.createChar(getCharacter(TET), tet);
-  lcd.createChar(getCharacter(SHIN), shin);
-  lcd.createChar(getCharacter(SAMECH), samech);
-  lcd.createChar(getCharacter(FEYSOFIT), feysofit);
-  lcd.createChar(getCharacter(AYIN), ayin);
+  relevantCharacters2 = overwriteRelevantCharactersList(newCharacters);
+  lcd2.createChar(getCharacter(BET), bet);
+  lcd2.createChar(getCharacter(VAV), vav);
+  lcd2.createChar(getCharacter(TET), tet);
+  lcd2.createChar(getCharacter(SHIN), shin);
+  lcd2.createChar(getCharacter(SAMECH), samech);
+  lcd2.createChar(getCharacter(FEYSOFIT), feysofit);
+  lcd2.createChar(getCharacter(AYIN), ayin);
+  return lcd2;
 }
 
-void createLcdSpecialCharactersForTimeUntilAlarm() {
+LiquidCrystal createLcdSpecialCharactersForTimeUntilAlarm(LiquidCrystal lcd2) {
   int newCharacters[] = {VAV, KUF, TET, SHIN, AYIN, TAF, DALET, HEY};
-  overwriteRelevantCharactersList(newCharacters);
-  lcd.createChar(getCharacter(VAV), vav);
-  lcd.createChar(getCharacter(KUF), kuf);
-  lcd.createChar(getCharacter(TET), tet);
-  lcd.createChar(getCharacter(SHIN), shin);
-  lcd.createChar(getCharacter(AYIN), ayin);
-  lcd.createChar(getCharacter(TAF), taf);
-  lcd.createChar(getCharacter(DALET), dalet);
-  lcd.createChar(getCharacter(HEY), hey);
+  relevantCharacters2 = overwriteRelevantCharactersList(newCharacters);
+  lcd2.createChar(getCharacter(VAV), vav);
+  lcd2.createChar(getCharacter(KUF), kuf);
+  lcd2.createChar(getCharacter(TET), tet);
+  lcd2.createChar(getCharacter(SHIN), shin);
+  lcd2.createChar(getCharacter(AYIN), ayin);
+  lcd2.createChar(getCharacter(TAF), taf);
+  lcd2.createChar(getCharacter(DALET), dalet);
+  lcd2.createChar(getCharacter(HEY), hey);
+  return lcd2;
 }
 
-void overwriteRelevantCharactersList(int newCharacters[]) {
+int * overwriteRelevantCharactersList(int newCharacters[]) {
   for (int i = 0; i < RELEVANT_CHARACTERS_COUNT; i++) {
     relevantCharacters[i] = newCharacters[i];
   }
+  return relevantCharacters;
 }
 
 int getCharacter(int characterToSearch) {
@@ -350,7 +355,7 @@ int getCharacter(int characterToSearch) {
 }
 
 void writeTimeLeftUntilAlarmToLcd() {
-  createLcdSpecialCharactersForTimeUntilAlarm();
+  lcd = createLcdSpecialCharactersForTimeUntilAlarm(lcd);
   long millisecondsUntilWakeup = timeUntilWakeup - (millis() % ONE_DAY);
   if (millisecondsUntilWakeup < 0) {
     millisecondsUntilWakeup += ONE_DAY;
@@ -411,7 +416,7 @@ void writeHey(int startingCursor) {
 }
 
 void writeBokerTov() {
-  createLcdSpecialCharactersForBokerTov();
+  lcd = createLcdSpecialCharactersForBokerTov(lcd);
   lcd.begin(16, 2);
   lcd.clear();
   lcd.setCursor(15, 0);
@@ -440,7 +445,7 @@ void writeBokerTov() {
 }
 
 void writeSofShavuahTov() {
-  createLcdSpecialCharactersForSofShavuahTov();
+  lcd = createLcdSpecialCharactersForSofShavuahTov(lcd);
   lcd.begin(16, 2);
   lcd.clear();
   lcd.setCursor(15, 0);

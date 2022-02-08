@@ -14,6 +14,9 @@
 #define DALET    14
 #define HEY      15
 
+// Characters generated with help from the LCD Custom Character Generator 
+// available at https://maxpromer.github.io/LCD-Character-Creator/
+
 byte bet[] = {
   B00000,
   B01110,
