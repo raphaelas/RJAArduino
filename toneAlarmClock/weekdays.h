@@ -5,3 +5,7 @@
 #define FRIDAY     5
 #define SATURDAY   6
 #define SUNDAY     7
+
+const int COUNT_WEEKEND_DAYS = 2;
+const int WEEKEND_DAYS[] = {SATURDAY, SUNDAY};
+const int DAYS_IN_WEEK = 7;

@@ -1,15 +1,15 @@
 #include <SPI.h>
 #include <SD.h>
 
-const int chipSelect = 4;
+const int CHIP_SELECT_PIN = 4;
 const int FILE_COUNT = 2;
-const String FILES[FILE_COUNT] = {"alarmset.txt", "alarmday.txt"};
+const String FILES_TO_REMOVE[FILE_COUNT] = {"alarmset.txt", "alarmday.txt"};
 
 void setup() {
   setUpSerialMonitor();
   initializeSdCard();
   for (int file = 0; file < FILE_COUNT; file++) {
-    String fileName = FILES[file];
+    String fileName = FILES_TO_REMOVE[file];
     if (SD.exists(fileName)) {
       Serial.println(fileName + " exists.");
       printTheFileBeforeDeletingIt(fileName);
@@ -45,7 +45,7 @@ void removeTheFile(String fileName) {
 }
 
 void initializeSdCard() {
-  if (!SD.begin(chipSelect)) {
+  if (!SD.begin(CHIP_SELECT_PIN)) {
     Serial.println("Card failed, or not present");
     while (1);
   }

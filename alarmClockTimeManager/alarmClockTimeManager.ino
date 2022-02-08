@@ -1,7 +1,7 @@
 #include <SPI.h>
 #include <SD.h>
 
-const int CHIP_SELECT = 4;
+const int CHIP_SELECT_PIN = 4;
 String alarmTimeFileName = "alarmset.txt";
 String alarmDayFileName = "alarmday.txt";
 File alarmTimeFile;
@@ -19,6 +19,7 @@ bool promptedForDay = false;
 bool recentlySentSomething = false;
 int countdown = 30000;
 byte nextByte;
+String requestFromOtherArduino;
 
 const int SERIAL_MONITOR_STARTUP_DELAY = 3000;
 
@@ -42,13 +43,14 @@ void loop() {
 }
 
 void initializeSdCard() {
-  if (!SD.begin(CHIP_SELECT)) {
+  if (!SD.begin(CHIP_SELECT_PIN)) {
     Serial.println("Card failed, or not present");
     while (1);
   }
 }
 
 void setUpSerialMonitors() {
+  // Remember to connect your serial monitors to a common ground.
   Serial1.begin(38400);
   Serial.begin(9600);
   delay(SERIAL_MONITOR_STARTUP_DELAY);
@@ -75,8 +77,9 @@ void writeNewTimeToFile() {
 
 void writeNewDayToFile() {
   if (!promptedForDay && !SD.exists(alarmDayFileName)) {
-    Serial.println("Enter a day of week integer from toneAlarmClock/weekdays.h. This");
+    Serial.println("Enter a day of week number from toneAlarmClock/weekdays.h. This");
     Serial.println("should be i.e. the day of the the next 8:00 AM occurrence.");
+    Serial.println("timeuntilalarm.py prints out the correct day to enter.");
     promptedForDay = true;
   }
   if (Serial.available()) {
@@ -136,11 +139,11 @@ void sendDayToOtherArduino() {
 
 void listenForTriggerFromOtherArduino() {
   if (Serial1.available()) {
-    String shouldGo = Serial1.readString();
-    Serial.println(shouldGo);
-    if (shouldGo.equals("timeplease")) {
+    requestFromOtherArduino = Serial1.readString();
+    Serial.println(requestFromOtherArduino);
+    if (requestFromOtherArduino.equals("timeplease")) {
       alreadySentTimeToSerial1 = false;
-    } else if (shouldGo.equals("dayplease")) {
+    } else if (requestFromOtherArduino.equals("dayplease")) {
       alreadySentDayToSerial1 = false;
     }
   }

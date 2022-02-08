@@ -5,6 +5,27 @@
 #include <SoftwareSerial.h>
 #include <LiquidCrystal.h>
 
+const int STOP_ALARM_SWITCH = A3;
+const int BATTERY_CHARGED_SWITCH = A2;
+const int UPDATE_TIME_SWITCH = A1;
+const int UPDATE_DAY_SWITCH = A0;
+const int KEEP_BATTERY_ALIVE_LED = 6;
+const int TIME_OR_BATTERY_CHARGED_IS_BEING_SET_LED = 7;
+const int PIEZO_PIN = 8;
+const int BATTERY_IS_LOW_LED = 9;
+const int RX_PIN = 10;
+const int TX_PIN = 11;
+const int DAY_IS_BEING_SET_LED = 13;
+const int LCD_RS_PIN = 1;
+const int LCD_E_PIN = 12;
+const int LCD_D4_PIN = 5;
+const int LCD_D5_PIN = 4;
+const int LCD_D6_PIN = 3;
+const int LCD_D7_PIN = 2;
+
+SoftwareSerial softwareSerial(RX_PIN, TX_PIN);
+LiquidCrystal lcd(LCD_RS_PIN, LCD_E_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
+
 const int ONE_SECOND = 1000;
 const int SECONDS_IN_MINUTE = 60, MINUTES_IN_HOUR = SECONDS_IN_MINUTE;
 const long ONE_MINUTE = long(ONE_SECOND) * SECONDS_IN_MINUTE;
@@ -12,33 +33,15 @@ const long ONE_HOUR = ONE_MINUTE * MINUTES_IN_HOUR;
 const long ONE_DAY = ONE_HOUR * 24;
 const long THREE_DAYS = ONE_DAY * 3;
 
-const int COUNT_WEEKEND_DAYS = 2;
-const int WEEKEND_DAYS[] = {SATURDAY, SUNDAY};
-const int DAYS_IN_WEEK = 7;
-
 const int DELAY_BETWEEN_REPEATS = 500, DELAY_BETWEEN_SWITCH_LISTENS = DELAY_BETWEEN_REPEATS;
 const int DELAY_DIVISOR = 10;
-
-const int STOP_ALARM_SWITCH = A3;
-const int BATTERY_CHARGED_SWITCH = A2;
-const int UPDATE_TIME_SWITCH = A1;
-const int UPDATE_DAY_SWITCH = A0;
-const int KEEP_BATTERY_ALIVE_LED = 6;
-const int TIME_OR_DAY_OR_BATTERY_CHARGED_IS_BEING_SET_LED = 7;
-const int PIEZO_PIN = 8;
-const int BATTERY_IS_LOW_LED = 9;
-const int RX_PIN = 10;
-const int TX_PIN = 11;
-
-SoftwareSerial softwareSerial(RX_PIN, TX_PIN);
-LiquidCrystal lcd(13, 12, 5, 4, 3, 2);
 
 const int KEEP_PORTABLE_BATTERY_ALIVE_COOLDOWN = 14500;
 const int BRIEF_MOMENT = 50, NOWISH = BRIEF_MOMENT;
 
 // These two variables should be set through an SD card over serial communication
 // via the alarmClockTimeManager project however some starter values are needed.
-const long STARTER_WAKEUP_TIME = 240000L;
+const long STARTER_WAKEUP_TIME = ONE_MINUTE * 4;
 const int STARTER_STARTING_DAY = TUESDAY;
 
 long timeUntilWakeup;
@@ -50,6 +53,10 @@ int serialDayIn;
 
 long timeLeftForBattery;
 unsigned long batteryChargedCheckpoint = 0;
+bool hasResetLcdMessagePosition = false;
+
+bool scrollLeft = true;
+int scrollPositionCounter = 0;
 
 const int ALARM_NOTE_COUNT = 8;
 const int STARTUP_NOTE_COUNT = 4;
@@ -81,7 +88,8 @@ bool keepSoundingAlarmClock = true;
 bool hasWrittenBokerTov = false;
 bool hasWrittenSofShavuahTov = false;
 bool hasWrittenTimeUntilAlarmRecently = false;
-int MAX_COUNTDOWN = 1, countdownBlinkLightWhileAlarmSounding = MAX_COUNTDOWN;
+int MAX_COUNTDOWN = 3;
+int countdownBlinkLightWhileAlarmSounding = 0;
 
 const int DELAY_BETWEEN_TEXT_SCROLLS = 666;
 const int MAX_SCROLL_AMOUNT = 3;
@@ -90,175 +98,11 @@ const int RELEVANT_CHARACTERS_COUNT = 8;
 int relevantCharacters[RELEVANT_CHARACTERS_COUNT];
 int recentRequest = 0;
 
-byte bet[] = {
-  B00000,
-  B01110,
-  B10001,
-  B00001,
-  B01101,
-  B10010,
-  B00000,
-  B00000
-};
-
-byte vav[] = {
-  B00000,
-  B00100,
-  B00100,
-  B00100,
-  B00100,
-  B00100,
-  B00000,
-  B00000
-};
-
-byte kuf[] = {
-  B00000,
-  B01110,
-  B00001,
-  B00101,
-  B00101,
-  B00100,
-  B00000,
-  B00000
-};
-
-byte resh[] = {
-  B00000,
-  B01110,
-  B00001,
-  B00001,
-  B00001,
-  B00001,
-  B00000,
-  B00000
-};
-
-byte tet[] = {
-  B00000,
-  B01000,
-  B10000,
-  B10010,
-  B01001,
-  B00110,
-  B00000,
-  B00000
-};
-
-byte fey[] = {
-  B00000,
-  B11110,
-  B00001,
-  B01101,
-  B10001,
-  B01110,
-  B00000,
-  B00000
-};
-
-byte aleph[] = {
-  B00000,
-  B10011,
-  B10100,
-  B10100,
-  B10100,
-  B10011,
-  B00000,
-  B00000
-};
-
-byte lamed[] = {
-  B00000,
-  B00110,
-  B00101,
-  B11100,
-  B10100,
-  B01000,
-  B00000,
-  B00000
-};
-
-byte shin[] = {
-  B00000,
-  B01110,
-  B10001,
-  B10110,
-  B10000,
-  B01110,
-  B00000,
-  B00000
-};
-
-byte samech[] = {
-  B00000,
-  B00110,
-  B01001,
-  B01001,
-  B01001,
-  B00110,
-  B00000,
-  B00000
-};
-
-byte feysofit[] = {
-  B00000,
-  B00111,
-  B00101,
-  B11111,
-  B10100,
-  B01000,
-  B00000,
-  B00000
-};
-
-byte ayin[] = {
-  B00000,
-  B01010,
-  B00100,
-  B01010,
-  B01010,
-  B00100,
-  B00000,
-  B00000
-};
-
-byte taf[] = {
-  B00000,
-  B01110,
-  B01001,
-  B01001,
-  B01001,
-  B11001,
-  B00000,
-  B00000
-};
-
-byte dalet[] = {
-  B00000,
-  B11100,
-  B00010,
-  B11001,
-  B10101,
-  B01110,
-  B00100,
-  B00000
-};
-
-byte hey[] = {
-  B00000,
-  B01100,
-  B00010,
-  B01001,
-  B01001,
-  B01001,
-  B00000,
-  B00000
-};
-
 void setup() {
   pinMode(KEEP_BATTERY_ALIVE_LED, OUTPUT);
-  pinMode(TIME_OR_DAY_OR_BATTERY_CHARGED_IS_BEING_SET_LED, OUTPUT);
+  pinMode(TIME_OR_BATTERY_CHARGED_IS_BEING_SET_LED, OUTPUT);
   pinMode(BATTERY_IS_LOW_LED, OUTPUT);
+  pinMode(DAY_IS_BEING_SET_LED, OUTPUT);
   pinMode(STOP_ALARM_SWITCH, INPUT);
   pinMode(BATTERY_CHARGED_SWITCH, INPUT);
   pinMode(UPDATE_TIME_SWITCH, INPUT);
@@ -275,20 +119,29 @@ void loop() {
   unsigned long currentMillisWithinDay = millis() % ONE_DAY;
   int currentDayOfWeek = calculateDayOfWeek(startingDay);
   if (isTimeToSoundAlarm(currentMillisWithinDay, currentDayOfWeek) && keepSoundingAlarmClock) {
+    if (!hasWrittenBokerTov) {
+      writeBokerTov();
+    }
     for (int note = 0; note < ALARM_NOTE_COUNT; note++) {
       checkStopAlarmSwitchState();
       if (keepSoundingAlarmClock) {
         playNote(alarmNotes[note], alarmNoteDurations[note]);
       }
-    }
-    if (!hasWrittenBokerTov) {
-      writeBokerTov();
+      if (note == (ALARM_NOTE_COUNT / 2)) {
+        scrollLcdMessage();
+      }
     }
     scrollLcdMessage();
-    keepPortableArduinoBatteryOnWhileAlarmSounding();      
+    keepPortableArduinoBatteryOnWhileAlarmSounding();
+    splitDelayToCheckForSwitchPress(DELAY_BETWEEN_REPEATS);
+  } else if (isTimeToSoundAlarm(currentMillisWithinDay, currentDayOfWeek) && !keepSoundingAlarmClock) {
+    if (!hasResetLcdMessagePosition) {
+      resetLcdMessagePosition();
+    }
   } else if (!isTimeToSoundAlarm(currentMillisWithinDay, currentDayOfWeek)) {
     keepSoundingAlarmClock = true;
-    countdownBlinkLightWhileAlarmSounding = MAX_COUNTDOWN;
+    countdownBlinkLightWhileAlarmSounding = 0;
+    hasResetLcdMessagePosition = false;
     if (!hasWrittenTimeUntilAlarmRecently && !dayIsWeekendDay(currentDayOfWeek)) {
       writeTimeLeftUntilAlarmToLcd();
     } else if (millis() % ONE_MINUTE < 2) {
@@ -372,7 +225,7 @@ void checkBatteryChargedSwitchState() {
   batteryChargedSwitchState = digitalRead(BATTERY_CHARGED_SWITCH);
   if (batteryChargedSwitchState == HIGH) {
     batteryChargedCheckpoint = millis();
-    blinkLight(TIME_OR_DAY_OR_BATTERY_CHARGED_IS_BEING_SET_LED);
+    blinkLight(TIME_OR_BATTERY_CHARGED_IS_BEING_SET_LED);
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
   }
 }
@@ -387,7 +240,7 @@ void listenToUpdateTimeSwitch() {
       serialTimeIn = softwareSerial.parseInt();
       if (serialTimeIn > 0) {
         setWakeupTimeVariables(serialTimeIn);
-        blinkLight(TIME_OR_DAY_OR_BATTERY_CHARGED_IS_BEING_SET_LED);
+        blinkLight(TIME_OR_BATTERY_CHARGED_IS_BEING_SET_LED);
         keepSoundingAlarmClock = true;
         writeTimeLeftUntilAlarmToLcd();
         recentRequest = 0;
@@ -407,7 +260,7 @@ void listenToUpdateDaySwitch() {
       softwareSerial.write(serialDayIn);
       if (serialDayIn > 0) {
         startingDay = serialDayIn;
-        blinkLight(TIME_OR_DAY_OR_BATTERY_CHARGED_IS_BEING_SET_LED);
+        blinkLight(DAY_IS_BEING_SET_LED);
         keepSoundingAlarmClock = true;
         writeTimeLeftUntilAlarmToLcd();
         recentRequest = 0;
@@ -416,7 +269,7 @@ void listenToUpdateDaySwitch() {
   }
 }
 
-boolean dayIsWeekendDay(int day) {
+bool dayIsWeekendDay(int day) {
   for (int weekendDay = 0; weekendDay < (COUNT_WEEKEND_DAYS); weekendDay++) {
     if (WEEKEND_DAYS[weekendDay] == day) {
       if (!hasWrittenSofShavuahTov) {
@@ -614,13 +467,26 @@ void writeSofShavuahTov() {
 }
 
 void scrollLcdMessage() {
-  for (int positionCounter = 0; positionCounter < MAX_SCROLL_AMOUNT; positionCounter++) {
+  if (scrollPositionCounter == MAX_SCROLL_AMOUNT) {
+    scrollLeft = !scrollLeft;
+    scrollPositionCounter = 0;
+  }
+  if (scrollLeft) {
     lcd.scrollDisplayLeft();
-    splitDelayToCheckForSwitchPress(DELAY_BETWEEN_TEXT_SCROLLS);
-  }
-  delay(DELAY_BETWEEN_TEXT_SCROLLS);
-  for (int positionCounter = 0; positionCounter < MAX_SCROLL_AMOUNT; positionCounter++) {
+  } else {
     lcd.scrollDisplayRight();
-    splitDelayToCheckForSwitchPress(DELAY_BETWEEN_TEXT_SCROLLS);
   }
+  scrollPositionCounter++;
+}
+
+void resetLcdMessagePosition() {
+  if (!scrollLeft) {
+    scrollPositionCounter = MAX_SCROLL_AMOUNT - scrollPositionCounter;
+  }
+  while (scrollPositionCounter > 0) {
+    lcd.scrollDisplayRight();
+    scrollPositionCounter--;
+  }
+  scrollLeft = true;
+  hasResetLcdMessagePosition = true;
 }
