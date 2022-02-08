@@ -1,7 +1,7 @@
 #include "weekdays.h"
 #include "pitches.h"
 #include "notedurations.h"
-#include "hebrewcharacters.h"
+#include "hebrewcharacterwriter.h"
 #include <SoftwareSerial.h>
 #include <LiquidCrystal.h>
 
@@ -15,9 +15,9 @@ const int PIEZO_PIN = 8;
 const int BATTERY_IS_LOW_LED = 9;
 const int RX_PIN = 10;
 const int TX_PIN = 11;
-const int DAY_IS_BEING_SET_LED = 13;
-const int LCD_RS_PIN = 1;
-const int LCD_E_PIN = 12;
+const int DAY_IS_BEING_SET_LED = 12;
+const int LCD_RS_PIN = 13;
+const int LCD_E_PIN = 1;
 const int LCD_D4_PIN = 5;
 const int LCD_D5_PIN = 4;
 const int LCD_D6_PIN = 3;
@@ -53,27 +53,26 @@ int serialDayIn;
 
 long timeLeftForBattery;
 unsigned long batteryChargedCheckpoint = 0;
-bool hasResetLcdMessagePosition = false;
 
-bool scrollLeft = true;
-int scrollPositionCounter = 0;
+struct LcdScrollData lcdScrollData = {true, 0};
+bool hasResetLcdMessagePosition = false;
 
 const int ALARM_NOTE_COUNT = 8;
 const int STARTUP_NOTE_COUNT = 4;
 
-const int alarmNotes[] = {
+const int ALARM_NOTES[] = {
   NOTE_C4, NOTE_G3, NOTE_G3, NOTE_A3, NOTE_G3, 0, NOTE_B3, NOTE_C4
 };
 
-const int startUpNotes[] = {
+const int START_UP_NOTES[] = {
   NOTE_G3, NOTE_A3, NOTE_B3, NOTE_C4
 };
 
-const int alarmNoteDurations[] = {
+const int ALARM_NOTE_DURATIONS[] = {
   QUARTER, EIGHTH, EIGHTH, QUARTER, QUARTER, QUARTER, QUARTER, QUARTER
 };
 
-const int startUpNoteDurations[] = {
+const int START_UP_NOTE_DURATIONS[] = {
   EIGHTH, EIGHTH, EIGHTH, EIGHTH
 };
 
@@ -91,12 +90,6 @@ bool hasWrittenTimeUntilAlarmRecently = false;
 int MAX_COUNTDOWN = 3;
 int countdownBlinkLightWhileAlarmSounding = 0;
 
-const int DELAY_BETWEEN_TEXT_SCROLLS = 666;
-const int MAX_SCROLL_AMOUNT = 3;
-
-const int RELEVANT_CHARACTERS_COUNT = 8;
-int relevantCharacters[RELEVANT_CHARACTERS_COUNT];
-int * relevantCharacters2;
 int recentRequest = 0;
 
 void setup() {
@@ -121,30 +114,33 @@ void loop() {
   int currentDayOfWeek = calculateDayOfWeek(startingDay);
   if (isTimeToSoundAlarm(currentMillisWithinDay, currentDayOfWeek) && keepSoundingAlarmClock) {
     if (!hasWrittenBokerTov) {
-      writeBokerTov();
+      writeBokerTov(lcd);
+      hasWrittenBokerTov = true;
     }
     for (int note = 0; note < ALARM_NOTE_COUNT; note++) {
       checkStopAlarmSwitchState();
       if (keepSoundingAlarmClock) {
-        playNote(alarmNotes[note], alarmNoteDurations[note]);
+        playNote(ALARM_NOTES[note], ALARM_NOTE_DURATIONS[note]);
       }
       if (note == (ALARM_NOTE_COUNT / 2)) {
-        scrollLcdMessage();
+        lcdScrollData = scrollLcdMessage(lcd, lcdScrollData);
       }
     }
-    scrollLcdMessage();
+    lcdScrollData = scrollLcdMessage(lcd, lcdScrollData);
     keepPortableArduinoBatteryOnWhileAlarmSounding();
     splitDelayToCheckForSwitchPress(DELAY_BETWEEN_REPEATS);
   } else if (isTimeToSoundAlarm(currentMillisWithinDay, currentDayOfWeek) && !keepSoundingAlarmClock) {
     if (!hasResetLcdMessagePosition) {
-      resetLcdMessagePosition();
+      lcdScrollData = resetLcdMessagePosition(lcd, lcdScrollData);
+      hasResetLcdMessagePosition = true;
     }
   } else if (!isTimeToSoundAlarm(currentMillisWithinDay, currentDayOfWeek)) {
     keepSoundingAlarmClock = true;
     countdownBlinkLightWhileAlarmSounding = 0;
     hasResetLcdMessagePosition = false;
     if (!hasWrittenTimeUntilAlarmRecently && !dayIsWeekendDay(currentDayOfWeek)) {
-      writeTimeLeftUntilAlarmToLcd();
+      calculateAndWriteTimeLeftUntilAlarmToLcd();
+      hasWrittenTimeUntilAlarmRecently = true;
     } else if (millis() % ONE_MINUTE < 2) {
       hasWrittenTimeUntilAlarmRecently = false;
     }
@@ -161,7 +157,7 @@ void playNote(int noteToPlay, int noteDuration) {
 
 void playStartUpNotes() {
   for (int note = 0; note < STARTUP_NOTE_COUNT; note++) {
-    playNote(startUpNotes[note], startUpNoteDurations[note]);
+    playNote(START_UP_NOTES[note], START_UP_NOTE_DURATIONS[note]);
   }
 }
 
@@ -243,7 +239,7 @@ void listenToUpdateTimeSwitch() {
         setWakeupTimeVariables(serialTimeIn);
         blinkLight(TIME_OR_BATTERY_CHARGED_IS_BEING_SET_LED);
         keepSoundingAlarmClock = true;
-        writeTimeLeftUntilAlarmToLcd();
+        calculateAndWriteTimeLeftUntilAlarmToLcd();
         recentRequest = 0;
       }
     }
@@ -263,7 +259,7 @@ void listenToUpdateDaySwitch() {
         startingDay = serialDayIn;
         blinkLight(DAY_IS_BEING_SET_LED);
         keepSoundingAlarmClock = true;
-        writeTimeLeftUntilAlarmToLcd();
+        calculateAndWriteTimeLeftUntilAlarmToLcd();
         recentRequest = 0;
       }
     }
@@ -274,7 +270,8 @@ bool dayIsWeekendDay(int day) {
   for (int weekendDay = 0; weekendDay < (COUNT_WEEKEND_DAYS); weekendDay++) {
     if (WEEKEND_DAYS[weekendDay] == day) {
       if (!hasWrittenSofShavuahTov) {
-        writeSofShavuahTov();
+        writeSofShavuahTov(lcd);
+        hasWrittenSofShavuahTov = true;
       }
       return true;
     }
@@ -297,201 +294,12 @@ bool isTimeToSoundAlarm(long currentMillisWithinDay, int currentDayOfWeek) {
          && !dayIsWeekendDay(currentDayOfWeek);
 }
 
-LiquidCrystal createLcdSpecialCharactersForBokerTov(LiquidCrystal lcd2) {
-  int newCharacters[] = {BET, VAV, KUF, RESH, TET, FEY, ALEPH, LAMED};
-  relevantCharacters2 = overwriteRelevantCharactersList(newCharacters);
-  lcd2.createChar(getCharacter(BET), bet);
-  lcd2.createChar(getCharacter(VAV), vav);
-  lcd2.createChar(getCharacter(KUF), kuf);
-  lcd2.createChar(getCharacter(RESH), resh);
-  lcd2.createChar(getCharacter(TET), tet);
-  lcd2.createChar(getCharacter(FEY), fey);
-  lcd2.createChar(getCharacter(ALEPH), aleph);
-  lcd2.createChar(getCharacter(LAMED), lamed);
-  return lcd2;
-}
-
-LiquidCrystal createLcdSpecialCharactersForSofShavuahTov(LiquidCrystal lcd2) {
-  int newCharacters[] = {BET, VAV, TET, SHIN, SAMECH, FEYSOFIT, AYIN, 0};
-  relevantCharacters2 = overwriteRelevantCharactersList(newCharacters);
-  lcd2.createChar(getCharacter(BET), bet);
-  lcd2.createChar(getCharacter(VAV), vav);
-  lcd2.createChar(getCharacter(TET), tet);
-  lcd2.createChar(getCharacter(SHIN), shin);
-  lcd2.createChar(getCharacter(SAMECH), samech);
-  lcd2.createChar(getCharacter(FEYSOFIT), feysofit);
-  lcd2.createChar(getCharacter(AYIN), ayin);
-  return lcd2;
-}
-
-LiquidCrystal createLcdSpecialCharactersForTimeUntilAlarm(LiquidCrystal lcd2) {
-  int newCharacters[] = {VAV, KUF, TET, SHIN, AYIN, TAF, DALET, HEY};
-  relevantCharacters2 = overwriteRelevantCharactersList(newCharacters);
-  lcd2.createChar(getCharacter(VAV), vav);
-  lcd2.createChar(getCharacter(KUF), kuf);
-  lcd2.createChar(getCharacter(TET), tet);
-  lcd2.createChar(getCharacter(SHIN), shin);
-  lcd2.createChar(getCharacter(AYIN), ayin);
-  lcd2.createChar(getCharacter(TAF), taf);
-  lcd2.createChar(getCharacter(DALET), dalet);
-  lcd2.createChar(getCharacter(HEY), hey);
-  return lcd2;
-}
-
-int * overwriteRelevantCharactersList(int newCharacters[]) {
-  for (int i = 0; i < RELEVANT_CHARACTERS_COUNT; i++) {
-    relevantCharacters[i] = newCharacters[i];
-  }
-  return relevantCharacters;
-}
-
-int getCharacter(int characterToSearch) {
-  for (int i = 0; i < RELEVANT_CHARACTERS_COUNT; i++) {
-    if (characterToSearch == relevantCharacters[i]) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-void writeTimeLeftUntilAlarmToLcd() {
-  lcd = createLcdSpecialCharactersForTimeUntilAlarm(lcd);
+void calculateAndWriteTimeLeftUntilAlarmToLcd() {
   long millisecondsUntilWakeup = timeUntilWakeup - (millis() % ONE_DAY);
   if (millisecondsUntilWakeup < 0) {
     millisecondsUntilWakeup += ONE_DAY;
   }
   int hoursLeftUntilAlarm = millisecondsUntilWakeup / ONE_HOUR;
   int minutesLeftUntilAlarm = (millisecondsUntilWakeup / ONE_MINUTE) % MINUTES_IN_HOUR;
-  lcd.begin(16, 2);
-  lcd.clear();
-  lcd.setCursor(14, 0);
-  int minutesCursor;
-  if (hoursLeftUntilAlarm > 0) {
-    lcd.print(hoursLeftUntilAlarm);
-    bool singularHours = (hoursLeftUntilAlarm == 1);
-    writeShahot(12, singularHours);
-    lcd.setCursor(6 + singularHours, 0);
-    lcd.print(minutesLeftUntilAlarm);
-    writeDakot(4 + singularHours, minutesLeftUntilAlarm == 1);
-  } else {
-    lcd.print(minutesLeftUntilAlarm);
-    writeDakot(12, minutesLeftUntilAlarm == 1);
-  }
-  hasWrittenTimeUntilAlarmRecently = true;
-}
-
-void writeShahot(int startingCursor, bool singular) {
-  lcd.setCursor(startingCursor, 0);
-  lcd.write(getCharacter(SHIN));
-  lcd.setCursor(startingCursor - 1, 0);
-  lcd.write(getCharacter(AYIN));
-  if (singular) {
-    writeHey(startingCursor - 2);
-  } else {
-    lcd.setCursor(startingCursor - 2, 0);
-    lcd.write(getCharacter(VAV));
-    lcd.setCursor(startingCursor - 3, 0);
-    lcd.write(getCharacter(TAF));   
-  }
-}
-
-void writeDakot(int startingCursor, bool singular) {
-  lcd.setCursor(startingCursor, 0);
-  lcd.write(getCharacter(DALET));
-  lcd.setCursor(startingCursor - 1, 0);
-  lcd.write(getCharacter(KUF));
-  if (singular) {
-    writeHey(startingCursor - 2);
-  } else {
-    lcd.setCursor(startingCursor - 2, 0);
-    lcd.write(getCharacter(VAV));
-    lcd.setCursor(startingCursor - 3, 0);
-    lcd.write(getCharacter(TAF));    
-  }
-}
-
-void writeHey(int startingCursor) {
-  lcd.setCursor(startingCursor, 0);
-  lcd.write(getCharacter(HEY));
-}
-
-void writeBokerTov() {
-  lcd = createLcdSpecialCharactersForBokerTov(lcd);
-  lcd.begin(16, 2);
-  lcd.clear();
-  lcd.setCursor(15, 0);
-  lcd.write(getCharacter(BET));
-  lcd.setCursor(14, 0);
-  lcd.write(getCharacter(VAV));
-  lcd.setCursor(13, 0);
-  lcd.write(getCharacter(KUF));
-  lcd.setCursor(12, 0);
-  lcd.write(getCharacter(RESH));
-  lcd.setCursor(10, 0);
-  lcd.write(getCharacter(TET));
-  lcd.setCursor(9, 0);
-  lcd.write(getCharacter(VAV));
-  lcd.setCursor(8, 0);
-  lcd.write(getCharacter(BET));
-  lcd.setCursor(6, 0);
-  lcd.write(getCharacter(RESH));
-  lcd.setCursor(5, 0);
-  lcd.write(getCharacter(FEY));
-  lcd.setCursor(4, 0);
-  lcd.write(getCharacter(ALEPH));
-  lcd.setCursor(3, 0);
-  lcd.write(getCharacter(LAMED));
-  hasWrittenBokerTov = true;
-}
-
-void writeSofShavuahTov() {
-  lcd = createLcdSpecialCharactersForSofShavuahTov(lcd);
-  lcd.begin(16, 2);
-  lcd.clear();
-  lcd.setCursor(15, 0);
-  lcd.write(getCharacter(SAMECH));
-  lcd.setCursor(14, 0);
-  lcd.write(getCharacter(VAV));
-  lcd.setCursor(13, 0);
-  lcd.write(getCharacter(FEYSOFIT));
-  lcd.setCursor(11, 0);
-  lcd.write(getCharacter(SHIN));
-  lcd.setCursor(10, 0);
-  lcd.write(getCharacter(BET));
-  lcd.setCursor(9, 0);
-  lcd.write(getCharacter(VAV));
-  lcd.setCursor(8, 0);
-  lcd.write(getCharacter(AYIN));
-  lcd.setCursor(6, 0);
-  lcd.write(getCharacter(TET));
-  lcd.setCursor(5, 0);
-  lcd.write(getCharacter(VAV));
-  lcd.setCursor(4, 0);
-  lcd.write(getCharacter(BET));
-  hasWrittenSofShavuahTov = true;
-}
-
-void scrollLcdMessage() {
-  if (scrollPositionCounter == MAX_SCROLL_AMOUNT) {
-    scrollLeft = !scrollLeft;
-    scrollPositionCounter = 0;
-  }
-  if (scrollLeft) {
-    lcd.scrollDisplayLeft();
-  } else {
-    lcd.scrollDisplayRight();
-  }
-  scrollPositionCounter++;
-}
-
-void resetLcdMessagePosition() {
-  if (!scrollLeft) {
-    scrollPositionCounter = MAX_SCROLL_AMOUNT - scrollPositionCounter;
-  }
-  while (scrollPositionCounter > 0) {
-    lcd.scrollDisplayRight();
-    scrollPositionCounter--;
-  }
-  scrollLeft = true;
-  hasResetLcdMessagePosition = true;
+  writeTimeLeftUntilAlarmToLcd(lcd, hoursLeftUntilAlarm, minutesLeftUntilAlarm);
 }
