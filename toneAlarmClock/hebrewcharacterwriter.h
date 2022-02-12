@@ -6,6 +6,11 @@ struct LcdScrollData {
   int scrollPositionCounter;
 };
 
+struct HoursMinutesDuration {
+  int hours;
+  int minutes;
+};
+
 const int RELEVANT_CHARACTERS_COUNT = 8;
 const int MAX_SCROLL_AMOUNT = 3;
 
@@ -109,7 +114,9 @@ void writeDakot(LiquidCrystal lcd, int relevantCharacters[], int startingCursor,
   }
 }
 
-void writeTimeLeftUntilAlarmToLcd(LiquidCrystal lcd, int hoursLeftUntilAlarm, int minutesLeftUntilAlarm) {
+void writeTimeLeftUntilAlarmToLcd(LiquidCrystal lcd, HoursMinutesDuration hoursMinutesDuration) {
+  int hoursLeftUntilAlarm = hoursMinutesDuration.hours;
+  int minutesLeftUntilAlarm = hoursMinutesDuration.minutes;
   int relevantCharacters[RELEVANT_CHARACTERS_COUNT];
   lcd = createLcdSpecialCharactersForTimeUntilAlarm(lcd, relevantCharacters);
   lcd.begin(16, 2);

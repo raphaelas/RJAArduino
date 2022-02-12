@@ -138,8 +138,10 @@ void loop() {
     keepSoundingAlarmClock = true;
     countdownBlinkLightWhileAlarmSounding = 0;
     hasResetLcdMessagePosition = false;
+    hasWrittenBokerTov = false;
     if (!hasWrittenTimeUntilAlarmRecently && !dayIsWeekendDay(currentDayOfWeek)) {
-      calculateAndWriteTimeLeftUntilAlarmToLcd();
+      HoursMinutesDuration hoursMinutesDuration = calculateTimeLeftUntilAlarm(timeUntilWakeup);
+      writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
       hasWrittenTimeUntilAlarmRecently = true;
     } else if (millis() % ONE_MINUTE < 2) {
       hasWrittenTimeUntilAlarmRecently = false;
@@ -166,16 +168,10 @@ void setWakeupTimeVariables(long theTimeUntilWakeup) {
   oneMinuteAfterWakeup = theTimeUntilWakeup + ONE_MINUTE;
 }
 
-void listenToSwitches() {
-  listenToUpdateTimeSwitch();
-  listenToUpdateDaySwitch();
-  checkBatteryChargedSwitchState();
-}
-
-int calculateDayOfWeek(int theStartingDay) {
-  int mathUsableStartingDay = theStartingDay - 1;
-  int startingDayMinusOne = (mathUsableStartingDay + (millis() / ONE_DAY)) % DAYS_IN_WEEK;
-  return startingDayMinusOne + 1;
+void blinkLight(int lightNumber) {
+  digitalWrite(lightNumber, HIGH);
+  delay(BRIEF_MOMENT);
+  digitalWrite(lightNumber, LOW);
 }
 
 void keepPortableArduinoBatteryOnWhileAlarmSounding() {
@@ -185,12 +181,6 @@ void keepPortableArduinoBatteryOnWhileAlarmSounding() {
   } else {
     countdownBlinkLightWhileAlarmSounding--;
   }
-}
-
-void blinkLight(int lightNumber) {
-  digitalWrite(lightNumber, HIGH);
-  delay(BRIEF_MOMENT);
-  digitalWrite(lightNumber, LOW);
 }
 
 void keepPortableArduinoBatteryOn() {
@@ -239,7 +229,8 @@ void listenToUpdateTimeSwitch() {
         setWakeupTimeVariables(serialTimeIn);
         blinkLight(TIME_OR_BATTERY_CHARGED_IS_BEING_SET_LED);
         keepSoundingAlarmClock = true;
-        calculateAndWriteTimeLeftUntilAlarmToLcd();
+        HoursMinutesDuration hoursMinutesDuration = calculateTimeLeftUntilAlarm(timeUntilWakeup);
+        writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
         recentRequest = 0;
       }
     }
@@ -259,11 +250,32 @@ void listenToUpdateDaySwitch() {
         startingDay = serialDayIn;
         blinkLight(DAY_IS_BEING_SET_LED);
         keepSoundingAlarmClock = true;
-        calculateAndWriteTimeLeftUntilAlarmToLcd();
+        HoursMinutesDuration hoursMinutesDuration = calculateTimeLeftUntilAlarm(timeUntilWakeup);
+        writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
         recentRequest = 0;
       }
     }
   }
+}
+
+void listenToSwitches() {
+  listenToUpdateTimeSwitch();
+  listenToUpdateDaySwitch();
+  checkBatteryChargedSwitchState();
+}
+
+void splitDelayToCheckForSwitchPress(int delayAmount) {
+  for (int i = 0; i < DELAY_DIVISOR; i++) {
+    delay(delayAmount / DELAY_DIVISOR);
+    checkStopAlarmSwitchState();
+    listenToSwitches();
+  }
+}
+
+int calculateDayOfWeek(int theStartingDay) {
+  int mathUsableStartingDay = theStartingDay - 1;
+  int startingDayMinusOne = (mathUsableStartingDay + (millis() / ONE_DAY)) % DAYS_IN_WEEK;
+  return startingDayMinusOne + 1;
 }
 
 bool dayIsWeekendDay(int day) {
@@ -279,27 +291,17 @@ bool dayIsWeekendDay(int day) {
   return false;
 }
 
-void splitDelayToCheckForSwitchPress(int delayAmount) {
-  for (int i = 0; i < DELAY_DIVISOR; i++) {
-    delay(delayAmount / DELAY_DIVISOR);
-    checkStopAlarmSwitchState();
-    checkBatteryChargedSwitchState();
-    listenToUpdateTimeSwitch();
-    listenToUpdateDaySwitch();
-  }
-}
-
 bool isTimeToSoundAlarm(long currentMillisWithinDay, int currentDayOfWeek) {
   return currentMillisWithinDay >= timeUntilWakeup && currentMillisWithinDay < oneMinuteAfterWakeup
          && !dayIsWeekendDay(currentDayOfWeek);
 }
 
-void calculateAndWriteTimeLeftUntilAlarmToLcd() {
-  long millisecondsUntilWakeup = timeUntilWakeup - (millis() % ONE_DAY);
+HoursMinutesDuration calculateTimeLeftUntilAlarm(long theTimeUntilWakeup) {
+  long millisecondsUntilWakeup = theTimeUntilWakeup - (millis() % ONE_DAY);
   if (millisecondsUntilWakeup < 0) {
     millisecondsUntilWakeup += ONE_DAY;
   }
   int hoursLeftUntilAlarm = millisecondsUntilWakeup / ONE_HOUR;
   int minutesLeftUntilAlarm = (millisecondsUntilWakeup / ONE_MINUTE) % MINUTES_IN_HOUR;
-  writeTimeLeftUntilAlarmToLcd(lcd, hoursLeftUntilAlarm, minutesLeftUntilAlarm);
+  return (HoursMinutesDuration) {hoursLeftUntilAlarm, minutesLeftUntilAlarm};  
 }

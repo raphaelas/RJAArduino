@@ -24,7 +24,7 @@ String requestFromOtherArduino;
 const int SERIAL_MONITOR_STARTUP_DELAY = 3000;
 
 void setup() {
-  setUpSerialMonitors();
+  setUpSerialCommunicators();
   initializeSdCard();
 }
 
@@ -49,8 +49,8 @@ void initializeSdCard() {
   }
 }
 
-void setUpSerialMonitors() {
-  // Remember to connect your serial monitors to a common ground.
+void setUpSerialCommunicators() {
+  // Remember to connect your serial communication to a common ground.
   Serial1.begin(38400);
   Serial.begin(9600);
   delay(SERIAL_MONITOR_STARTUP_DELAY);
@@ -91,6 +91,7 @@ void writeNewDayToFile() {
         Serial.println(newDay);
         daySet = true;
         Serial.println("Arduino MKR is now ready to set Arduino Uno time variables.");
+        Serial.println("Remember to connect the serial communication pins and a common ground.");
       }
     }
     alarmDayFile.close();
