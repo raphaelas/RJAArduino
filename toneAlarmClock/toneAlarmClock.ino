@@ -1,6 +1,7 @@
 #include "theconstants.h"
 #include "hebrewcharacterwriter.h"
 #include "timecalculations.h"
+#include "tonealarmclockglobalstatevariables.h"
 #include <SoftwareSerial.h>
 #include <LiquidCrystal.h>
 
@@ -24,25 +25,6 @@ const int LCD_D7_PIN = 2;
 
 SoftwareSerial softwareSerial(RX_PIN, TX_PIN);
 LiquidCrystal lcd(LCD_RS_PIN, LCD_E_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
-
-long timeUntilWakeup;
-int startingDay;
-
-struct LcdScrollData lcdScrollData = {true, 0};
-bool hasResetLcdMessagePosition = false;
-
-int stopAlarmSwitchState = 0;
-int updateTimeSwitchState = 0;
-int updateDaySwitchState = 0;
-int powerbankChargedSwitchState = 0;
-
-bool keepSoundingAlarmClock = true;
-bool hasWrittenBokerTov = false;
-bool hasWrittenSofShavuahTov = false;
-bool hasWrittenTimeUntilAlarmRecently = false;
-
-int countdownBlinkLightWhileAlarmSounding = 0;
-unsigned long powerbankChargedCheckpoint = 0;
 
 void setup() {
   pinMode(KEEP_POWERBANK_ALIVE_LED, OUTPUT);
@@ -144,7 +126,7 @@ void blinkLight(int lightNumber) {
 
 void keepPowerbankOnWhileAlarmSounding() {
   if (countdownBlinkLightWhileAlarmSounding == 0) {
-    blinkLight(determineCorrectIndicatorLight());
+    blinkLight(determineCorrectIndicatorLight(powerbankChargedCheckpoint));
     countdownBlinkLightWhileAlarmSounding = MAX_COUNTDOWN;
   } else {
     countdownBlinkLightWhileAlarmSounding--;
@@ -154,12 +136,12 @@ void keepPowerbankOnWhileAlarmSounding() {
 void keepPowerbankOn() {
   unsigned long currentMillisWithinPowerbankKeepAliveCooldown = millis() % KEEP_POWERBANK_ALIVE_COOLDOWN;
   if (currentMillisWithinPowerbankKeepAliveCooldown < NOWISH) {
-    blinkLight(determineCorrectIndicatorLight());
+    blinkLight(determineCorrectIndicatorLight(powerbankChargedCheckpoint));
   }
 }
 
-int determineCorrectIndicatorLight() {
-  long timeLeftForPowerbank = (powerbankChargedCheckpoint + THREE_DAYS) - millis();
+int determineCorrectIndicatorLight(unsigned long thePowerbankChargedCheckpoint) {
+  long timeLeftForPowerbank = (thePowerbankChargedCheckpoint + THREE_DAYS) - millis();
   if (timeLeftForPowerbank > 0) {
     return KEEP_POWERBANK_ALIVE_LED;
   } else {
@@ -171,7 +153,7 @@ void checkStopAlarmSwitchState() {
   stopAlarmSwitchState = digitalRead(STOP_ALARM_SWITCH);
   if (stopAlarmSwitchState == HIGH) {
     keepSoundingAlarmClock = false;
-    blinkLight(determineCorrectIndicatorLight());
+    blinkLight(determineCorrectIndicatorLight(powerbankChargedCheckpoint));
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
   }
 }
