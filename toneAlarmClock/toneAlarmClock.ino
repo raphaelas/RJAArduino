@@ -255,6 +255,7 @@ void listenToUpdateDaySwitch() {
         keepSoundingAlarmClock = true;
         HoursMinutesDuration hoursMinutesDuration = calculateTimeLeftUntilAlarm(timeUntilWakeup);
         writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
+        dayIsWeekendDay(startingDay);
         recentRequest = 0;
       }
     }
