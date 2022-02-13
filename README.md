@@ -1,1 +1,1 @@
-The main file is alarmClockTimeManager/alarmClockTimeManager.ino.
+The main file is toneAlarmClock/toneAlarmClock.ino.
