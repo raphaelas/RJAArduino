@@ -10,7 +10,7 @@ const int POWERBANK_CHARGED_SWITCH = A2;
 const int UPDATE_TIME_SWITCH = A1;
 const int UPDATE_DAY_SWITCH = A0;
 const int KEEP_POWERBANK_ALIVE_LED = 6;
-const int TIME_OR_POWERBANK_CHARGED_IS_BEING_SET_LED = 7;
+const int TIME_IS_BEING_SET_OR_POWERBANK_CHARGED_LED = 7;
 const int PIEZO_PIN = 8;
 const int POWERBANK_IS_LOW_LED = 9;
 const int RX_PIN = 10;
@@ -97,7 +97,7 @@ int recentRequest = 0;
 
 void setup() {
   pinMode(KEEP_POWERBANK_ALIVE_LED, OUTPUT);
-  pinMode(TIME_OR_POWERBANK_CHARGED_IS_BEING_SET_LED, OUTPUT);
+  pinMode(TIME_IS_BEING_SET_OR_POWERBANK_CHARGED_LED, OUTPUT);
   pinMode(POWERBANK_IS_LOW_LED, OUTPUT);
   pinMode(DAY_IS_BEING_SET_LED, OUTPUT);
   pinMode(STOP_ALARM_SWITCH, INPUT);
@@ -215,7 +215,7 @@ void checkPowerbankChargedSwitchState() {
   powerbankChargedSwitchState = digitalRead(POWERBANK_CHARGED_SWITCH);
   if (powerbankChargedSwitchState == HIGH) {
     powerbankChargedCheckpoint = millis();
-    blinkLight(TIME_OR_POWERBANK_CHARGED_IS_BEING_SET_LED);
+    blinkLight(TIME_IS_BEING_SET_OR_POWERBANK_CHARGED_LED);
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
   }
 }
@@ -230,7 +230,7 @@ void listenToUpdateTimeSwitch() {
       serialTimeIn = softwareSerial.parseInt();
       if (serialTimeIn > 0) {
         setWakeupTimeVariables(serialTimeIn);
-        blinkLight(TIME_OR_POWERBANK_CHARGED_IS_BEING_SET_LED);
+        blinkLight(TIME_IS_BEING_SET_OR_POWERBANK_CHARGED_LED);
         keepSoundingAlarmClock = true;
         HoursMinutesDuration hoursMinutesDuration = calculateTimeLeftUntilAlarm(timeUntilWakeup);
         writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
