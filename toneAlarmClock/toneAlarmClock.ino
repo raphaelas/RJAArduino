@@ -236,13 +236,3 @@ void splitDelayToCheckForSwitchPress(int delayAmount) {
     listenToSwitches();
   }
 }
-
-HoursMinutesDuration calculateTimeLeftUntilAlarm(long theTimeUntilWakeup) {
-  long millisecondsUntilWakeup = theTimeUntilWakeup - (millis() % ONE_DAY);
-  if (millisecondsUntilWakeup < 0) {
-    millisecondsUntilWakeup += ONE_DAY;
-  }
-  int hoursLeftUntilAlarm = millisecondsUntilWakeup / ONE_HOUR;
-  int minutesLeftUntilAlarm = (millisecondsUntilWakeup / ONE_MINUTE) % MINUTES_IN_HOUR;
-  return (HoursMinutesDuration) {hoursLeftUntilAlarm, minutesLeftUntilAlarm};  
-}

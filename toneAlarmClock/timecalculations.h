@@ -1,3 +1,11 @@
+// This needs to be included after theconstants.h in toneAlarmClock because ONE_DAY,
+// WEEKEND_DAYS, and ONE_MINUTE are already declared there and used in toneAlarmClock.
+// This also needs to be included after hebrewcharacterwriter.h in toneAlarmClock
+// because HoursMinutesDuration is already declared there and used in toneAlarmClock.
+
+const int DAYS_IN_WEEK = 7;
+const int COUNT_WEEKEND_DAYS = 2;
+
 int calculateDayOfWeek(int theStartingDay) {
   int mathUsableStartingDay = theStartingDay - 1;
   int startingDayMinusOne = (mathUsableStartingDay + (millis() / ONE_DAY)) % DAYS_IN_WEEK;
@@ -19,4 +27,15 @@ bool isTimeToSoundAlarm(long theTimeUntilWakeup, int theStartingDay) {
   long oneMinuteAfterWakeup = theTimeUntilWakeup + ONE_MINUTE;
   return currentMillisecondsWithinDay >= theTimeUntilWakeup && currentMillisecondsWithinDay < oneMinuteAfterWakeup
          && !dayIsWeekendDay(theStartingDay);
+}
+
+
+HoursMinutesDuration calculateTimeLeftUntilAlarm(long theTimeUntilWakeup) {
+  long millisecondsUntilWakeup = theTimeUntilWakeup - (millis() % ONE_DAY);
+  if (millisecondsUntilWakeup < 0) {
+    millisecondsUntilWakeup += ONE_DAY;
+  }
+  int hoursLeftUntilAlarm = millisecondsUntilWakeup / ONE_HOUR;
+  int minutesLeftUntilAlarm = (millisecondsUntilWakeup / ONE_MINUTE) % MINUTES_IN_HOUR;
+  return (HoursMinutesDuration) {hoursLeftUntilAlarm, minutesLeftUntilAlarm};  
 }
