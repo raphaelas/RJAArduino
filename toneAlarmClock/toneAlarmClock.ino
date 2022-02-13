@@ -6,13 +6,13 @@
 #include <LiquidCrystal.h>
 
 const int STOP_ALARM_SWITCH = A3;
-const int BATTERY_CHARGED_SWITCH = A2;
+const int POWERBANK_CHARGED_SWITCH = A2;
 const int UPDATE_TIME_SWITCH = A1;
 const int UPDATE_DAY_SWITCH = A0;
-const int KEEP_BATTERY_ALIVE_LED = 6;
-const int TIME_OR_BATTERY_CHARGED_IS_BEING_SET_LED = 7;
+const int KEEP_POWERBANK_ALIVE_LED = 6;
+const int TIME_OR_POWERBANK_CHARGED_IS_BEING_SET_LED = 7;
 const int PIEZO_PIN = 8;
-const int BATTERY_IS_LOW_LED = 9;
+const int POWERBANK_IS_LOW_LED = 9;
 const int RX_PIN = 10;
 const int TX_PIN = 11;
 const int DAY_IS_BEING_SET_LED = 12;
@@ -36,7 +36,10 @@ const long THREE_DAYS = ONE_DAY * 3;
 const int DELAY_BETWEEN_REPEATS = 500, DELAY_BETWEEN_SWITCH_LISTENS = DELAY_BETWEEN_REPEATS;
 const int DELAY_DIVISOR = 10;
 
-const int KEEP_PORTABLE_BATTERY_ALIVE_COOLDOWN = 14500;
+// This powerbank is the Arduino Powerbank 8000. In order to prevent the powerbank from
+// shutting itself down after ~15 seconds of low power output, we blink a bright LED every
+// 15 seconds.
+const int KEEP_POWERBANK_ALIVE_COOLDOWN = ONE_SECOND * 15;
 const int BRIEF_MOMENT = 50, NOWISH = BRIEF_MOMENT;
 
 // These two variables should be set through an SD card over serial communication
@@ -51,8 +54,8 @@ int startingDay;
 long serialTimeIn;
 int serialDayIn;
 
-long timeLeftForBattery;
-unsigned long batteryChargedCheckpoint = 0;
+long timeLeftForPowerbank;
+unsigned long powerbankChargedCheckpoint = 0;
 
 struct LcdScrollData lcdScrollData = {true, 0};
 bool hasResetLcdMessagePosition = false;
@@ -81,7 +84,7 @@ const float RECOMMENDED_NOTE_PAUSE_MULTIPLIER = 1.30;
 int stopAlarmSwitchState = 0;
 int updateTimeSwitchState = 0;
 int updateDaySwitchState = 0;
-int batteryChargedSwitchState = 0;
+int powerbankChargedSwitchState = 0;
 
 bool keepSoundingAlarmClock = true;
 bool hasWrittenBokerTov = false;
@@ -93,12 +96,12 @@ int countdownBlinkLightWhileAlarmSounding = 0;
 int recentRequest = 0;
 
 void setup() {
-  pinMode(KEEP_BATTERY_ALIVE_LED, OUTPUT);
-  pinMode(TIME_OR_BATTERY_CHARGED_IS_BEING_SET_LED, OUTPUT);
-  pinMode(BATTERY_IS_LOW_LED, OUTPUT);
+  pinMode(KEEP_POWERBANK_ALIVE_LED, OUTPUT);
+  pinMode(TIME_OR_POWERBANK_CHARGED_IS_BEING_SET_LED, OUTPUT);
+  pinMode(POWERBANK_IS_LOW_LED, OUTPUT);
   pinMode(DAY_IS_BEING_SET_LED, OUTPUT);
   pinMode(STOP_ALARM_SWITCH, INPUT);
-  pinMode(BATTERY_CHARGED_SWITCH, INPUT);
+  pinMode(POWERBANK_CHARGED_SWITCH, INPUT);
   pinMode(UPDATE_TIME_SWITCH, INPUT);
   pinMode(UPDATE_DAY_SWITCH, INPUT);
   softwareSerial.begin(38400);
@@ -108,7 +111,7 @@ void setup() {
 }
 
 void loop() {
-  keepPortableArduinoBatteryOn();
+  keepPowerbankOn();
   listenToSwitches();
   unsigned long currentMillisWithinDay = millis() % ONE_DAY;
   int currentDayOfWeek = calculateDayOfWeek(startingDay);
@@ -127,7 +130,7 @@ void loop() {
       }
     }
     lcdScrollData = scrollLcdMessage(lcd, lcdScrollData);
-    keepPortableArduinoBatteryOnWhileAlarmSounding();
+    keepPowerbankOnWhileAlarmSounding();
     splitDelayToCheckForSwitchPress(DELAY_BETWEEN_REPEATS);
   } else if (isTimeToSoundAlarm(currentMillisWithinDay, currentDayOfWeek) && !keepSoundingAlarmClock) {
     if (!hasResetLcdMessagePosition) {
@@ -174,7 +177,7 @@ void blinkLight(int lightNumber) {
   digitalWrite(lightNumber, LOW);
 }
 
-void keepPortableArduinoBatteryOnWhileAlarmSounding() {
+void keepPowerbankOnWhileAlarmSounding() {
   if (countdownBlinkLightWhileAlarmSounding == 0) {
     blinkLight(determineCorrectIndicatorLight());
     countdownBlinkLightWhileAlarmSounding = MAX_COUNTDOWN;
@@ -183,19 +186,19 @@ void keepPortableArduinoBatteryOnWhileAlarmSounding() {
   }
 }
 
-void keepPortableArduinoBatteryOn() {
-  unsigned long currentMillisWithinBatteryKeepAliveCooldown = millis() % KEEP_PORTABLE_BATTERY_ALIVE_COOLDOWN;
-  if (currentMillisWithinBatteryKeepAliveCooldown < NOWISH) {
+void keepPowerbankOn() {
+  unsigned long currentMillisWithinPowerbankKeepAliveCooldown = millis() % KEEP_POWERBANK_ALIVE_COOLDOWN;
+  if (currentMillisWithinPowerbankKeepAliveCooldown < NOWISH) {
     blinkLight(determineCorrectIndicatorLight());
   }
 }
 
 int determineCorrectIndicatorLight() {
-  timeLeftForBattery = (batteryChargedCheckpoint + THREE_DAYS) - millis();
-  if (timeLeftForBattery > 0) {
-    return KEEP_BATTERY_ALIVE_LED;
+  timeLeftForPowerbank = (powerbankChargedCheckpoint + THREE_DAYS) - millis();
+  if (timeLeftForPowerbank > 0) {
+    return KEEP_POWERBANK_ALIVE_LED;
   } else {
-    return BATTERY_IS_LOW_LED;
+    return POWERBANK_IS_LOW_LED;
   }
 }
 
@@ -208,11 +211,11 @@ void checkStopAlarmSwitchState() {
   }
 }
 
-void checkBatteryChargedSwitchState() {
-  batteryChargedSwitchState = digitalRead(BATTERY_CHARGED_SWITCH);
-  if (batteryChargedSwitchState == HIGH) {
-    batteryChargedCheckpoint = millis();
-    blinkLight(TIME_OR_BATTERY_CHARGED_IS_BEING_SET_LED);
+void checkPowerbankChargedSwitchState() {
+  powerbankChargedSwitchState = digitalRead(POWERBANK_CHARGED_SWITCH);
+  if (powerbankChargedSwitchState == HIGH) {
+    powerbankChargedCheckpoint = millis();
+    blinkLight(TIME_OR_POWERBANK_CHARGED_IS_BEING_SET_LED);
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
   }
 }
@@ -227,7 +230,7 @@ void listenToUpdateTimeSwitch() {
       serialTimeIn = softwareSerial.parseInt();
       if (serialTimeIn > 0) {
         setWakeupTimeVariables(serialTimeIn);
-        blinkLight(TIME_OR_BATTERY_CHARGED_IS_BEING_SET_LED);
+        blinkLight(TIME_OR_POWERBANK_CHARGED_IS_BEING_SET_LED);
         keepSoundingAlarmClock = true;
         HoursMinutesDuration hoursMinutesDuration = calculateTimeLeftUntilAlarm(timeUntilWakeup);
         writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
@@ -261,7 +264,7 @@ void listenToUpdateDaySwitch() {
 void listenToSwitches() {
   listenToUpdateTimeSwitch();
   listenToUpdateDaySwitch();
-  checkBatteryChargedSwitchState();
+  checkPowerbankChargedSwitchState();
 }
 
 void splitDelayToCheckForSwitchPress(int delayAmount) {
