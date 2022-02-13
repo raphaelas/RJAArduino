@@ -110,10 +110,7 @@ void loop() {
   if (isTimeToSoundAlarm(startingDay) && keepSoundingAlarmClock) {
     handleTimeToSoundAlarm();
   } else if (isTimeToSoundAlarm(startingDay) && !keepSoundingAlarmClock) {
-    if (!hasResetLcdMessagePosition) {
-      lcdScrollData = resetLcdMessagePosition(lcd, lcdScrollData);
-      hasResetLcdMessagePosition = true;
-    }
+    handleInBetweenStopButtonPressAndAlarmTimeEnding();
   } else if (!isTimeToSoundAlarm(startingDay)) {
     handleNotTimeToSoundAlarm();
   }
@@ -145,6 +142,13 @@ void handleNotTimeToSoundAlarm() {
     hasWrittenTimeUntilAlarmRecently = true;
   } else if (millis() % ONE_MINUTE < LOW_SEVERITY_NOWISH) {
     hasWrittenTimeUntilAlarmRecently = false;
+  }
+}
+
+void handleInBetweenStopButtonPressAndAlarmTimeEnding() {
+  if (!hasResetLcdMessagePosition) {
+    lcdScrollData = resetLcdMessagePosition(lcd, lcdScrollData);
+    hasResetLcdMessagePosition = true;
   }
 }
 
