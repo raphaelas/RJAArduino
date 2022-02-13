@@ -40,7 +40,8 @@ const int DELAY_DIVISOR = 10;
 // shutting itself down after ~15 seconds of low power output, we blink a bright LED every
 // 15 seconds.
 const int KEEP_POWERBANK_ALIVE_COOLDOWN = ONE_SECOND * 15;
-const int BRIEF_MOMENT = 50, NOWISH = BRIEF_MOMENT;
+const int BRIEF_MOMENT = 50; int NOWISH = BRIEF_MOMENT;
+const int LOW_SEVERITY_NOWISH = 5;
 
 // These two variables should be set through an SD card over serial communication
 // via the alarmClockTimeManager project however some starter values are needed.
@@ -48,14 +49,7 @@ const long STARTER_WAKEUP_TIME = ONE_MINUTE * 4;
 const int STARTER_STARTING_DAY = TUESDAY;
 
 long timeUntilWakeup;
-long oneMinuteAfterWakeup;
-
 int startingDay;
-long serialTimeIn;
-int serialDayIn;
-
-long timeLeftForPowerbank;
-unsigned long powerbankChargedCheckpoint = 0;
 
 struct LcdScrollData lcdScrollData = {true, 0};
 bool hasResetLcdMessagePosition = false;
@@ -90,10 +84,10 @@ bool keepSoundingAlarmClock = true;
 bool hasWrittenBokerTov = false;
 bool hasWrittenSofShavuahTov = false;
 bool hasWrittenTimeUntilAlarmRecently = false;
-int MAX_COUNTDOWN = 3;
-int countdownBlinkLightWhileAlarmSounding = 0;
 
-int recentRequest = 0;
+const int MAX_COUNTDOWN = 3;
+int countdownBlinkLightWhileAlarmSounding = 0;
+unsigned long powerbankChargedCheckpoint = 0;
 
 void setup() {
   pinMode(KEEP_POWERBANK_ALIVE_LED, OUTPUT);
@@ -105,7 +99,7 @@ void setup() {
   pinMode(UPDATE_TIME_SWITCH, INPUT);
   pinMode(UPDATE_DAY_SWITCH, INPUT);
   softwareSerial.begin(38400);
-  setWakeupTimeVariables(STARTER_WAKEUP_TIME);
+  timeUntilWakeup = STARTER_WAKEUP_TIME;
   startingDay = STARTER_STARTING_DAY;
   playStartUpNotes();
 }
@@ -113,41 +107,55 @@ void setup() {
 void loop() {
   keepPowerbankOn();
   listenToSwitches();
-  unsigned long currentMillisWithinDay = millis() % ONE_DAY;
-  int currentDayOfWeek = calculateDayOfWeek(startingDay);
-  if (isTimeToSoundAlarm(currentMillisWithinDay, currentDayOfWeek) && keepSoundingAlarmClock) {
-    if (!hasWrittenBokerTov) {
-      writeBokerTov(lcd);
-      hasWrittenBokerTov = true;
-    }
-    for (int note = 0; note < ALARM_NOTE_COUNT; note++) {
-      checkStopAlarmSwitchState();
-      if (keepSoundingAlarmClock) {
-        playNote(ALARM_NOTES[note], ALARM_NOTE_DURATIONS[note]);
-      }
-      if (note == (ALARM_NOTE_COUNT / 2)) {
-        lcdScrollData = scrollLcdMessage(lcd, lcdScrollData);
-      }
-    }
-    lcdScrollData = scrollLcdMessage(lcd, lcdScrollData);
-    keepPowerbankOnWhileAlarmSounding();
-    splitDelayToCheckForSwitchPress(DELAY_BETWEEN_REPEATS);
-  } else if (isTimeToSoundAlarm(currentMillisWithinDay, currentDayOfWeek) && !keepSoundingAlarmClock) {
+  if (isTimeToSoundAlarm(startingDay) && keepSoundingAlarmClock) {
+    handleTimeToSoundAlarm();
+  } else if (isTimeToSoundAlarm(startingDay) && !keepSoundingAlarmClock) {
     if (!hasResetLcdMessagePosition) {
       lcdScrollData = resetLcdMessagePosition(lcd, lcdScrollData);
       hasResetLcdMessagePosition = true;
     }
-  } else if (!isTimeToSoundAlarm(currentMillisWithinDay, currentDayOfWeek)) {
-    keepSoundingAlarmClock = true;
-    countdownBlinkLightWhileAlarmSounding = 0;
+  } else if (!isTimeToSoundAlarm(startingDay)) {
+    handleNotTimeToSoundAlarm();
+  }
+}
+
+void handleTimeToSoundAlarm() {
+  if (!hasWrittenBokerTov) {
+    writeBokerTov(lcd);
+    hasWrittenBokerTov = true;
     hasResetLcdMessagePosition = false;
-    hasWrittenBokerTov = false;
-    if (!hasWrittenTimeUntilAlarmRecently && !dayIsWeekendDay(currentDayOfWeek)) {
-      HoursMinutesDuration hoursMinutesDuration = calculateTimeLeftUntilAlarm(timeUntilWakeup);
-      writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
-      hasWrittenTimeUntilAlarmRecently = true;
-    } else if (millis() % ONE_MINUTE < 2) {
-      hasWrittenTimeUntilAlarmRecently = false;
+  }
+  soundAlarm();
+  lcdScrollData = scrollLcdMessage(lcd, lcdScrollData);
+  keepPowerbankOnWhileAlarmSounding();
+  splitDelayToCheckForSwitchPress(DELAY_BETWEEN_REPEATS);
+}
+
+void handleNotTimeToSoundAlarm() {
+  keepSoundingAlarmClock = true;
+  countdownBlinkLightWhileAlarmSounding = 0;
+  hasWrittenBokerTov = false;
+  if (!hasResetLcdMessagePosition) {
+    lcdScrollData = resetLcdMessagePosition(lcd, lcdScrollData);
+    hasResetLcdMessagePosition = true;
+  }
+  if (!hasWrittenTimeUntilAlarmRecently && !dayIsWeekendDay(startingDay)) {
+    HoursMinutesDuration hoursMinutesDuration = calculateTimeLeftUntilAlarm(timeUntilWakeup);
+    writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
+    hasWrittenTimeUntilAlarmRecently = true;
+  } else if (millis() % ONE_MINUTE < LOW_SEVERITY_NOWISH) {
+    hasWrittenTimeUntilAlarmRecently = false;
+  }
+}
+
+void soundAlarm() {
+  for (int note = 0; note < ALARM_NOTE_COUNT; note++) {
+    checkStopAlarmSwitchState();
+    if (keepSoundingAlarmClock) {
+      playNote(ALARM_NOTES[note], ALARM_NOTE_DURATIONS[note]);
+    }
+    if (note == (ALARM_NOTE_COUNT / 2)) {
+      lcdScrollData = scrollLcdMessage(lcd, lcdScrollData);
     }
   }
 }
@@ -164,11 +172,6 @@ void playStartUpNotes() {
   for (int note = 0; note < STARTUP_NOTE_COUNT; note++) {
     playNote(START_UP_NOTES[note], START_UP_NOTE_DURATIONS[note]);
   }
-}
-
-void setWakeupTimeVariables(long theTimeUntilWakeup) {
-  timeUntilWakeup = theTimeUntilWakeup;
-  oneMinuteAfterWakeup = theTimeUntilWakeup + ONE_MINUTE;
 }
 
 void blinkLight(int lightNumber) {
@@ -194,7 +197,7 @@ void keepPowerbankOn() {
 }
 
 int determineCorrectIndicatorLight() {
-  timeLeftForPowerbank = (powerbankChargedCheckpoint + THREE_DAYS) - millis();
+  long timeLeftForPowerbank = (powerbankChargedCheckpoint + THREE_DAYS) - millis();
   if (timeLeftForPowerbank > 0) {
     return KEEP_POWERBANK_ALIVE_LED;
   } else {
@@ -223,19 +226,15 @@ void checkPowerbankChargedSwitchState() {
 void listenToUpdateTimeSwitch() {
   updateTimeSwitchState = digitalRead(UPDATE_TIME_SWITCH);
   if (updateTimeSwitchState == HIGH) {
-    recentRequest = 1;
     softwareSerial.write("timeplease");
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
-    if (recentRequest == 1) {
-      serialTimeIn = softwareSerial.parseInt();
-      if (serialTimeIn > 0) {
-        setWakeupTimeVariables(serialTimeIn);
-        blinkLight(TIME_IS_BEING_SET_OR_POWERBANK_CHARGED_LED);
-        keepSoundingAlarmClock = true;
-        HoursMinutesDuration hoursMinutesDuration = calculateTimeLeftUntilAlarm(timeUntilWakeup);
-        writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
-        recentRequest = 0;
-      }
+    long serialTimeIn = softwareSerial.parseInt();
+    if (serialTimeIn > 0) {
+      timeUntilWakeup = serialTimeIn;
+      blinkLight(TIME_IS_BEING_SET_OR_POWERBANK_CHARGED_LED);
+      keepSoundingAlarmClock = true;
+      HoursMinutesDuration hoursMinutesDuration = calculateTimeLeftUntilAlarm(timeUntilWakeup);
+      writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
     }
   }
 }
@@ -243,21 +242,17 @@ void listenToUpdateTimeSwitch() {
 void listenToUpdateDaySwitch() {
   updateDaySwitchState = digitalRead(UPDATE_DAY_SWITCH);
   if (updateDaySwitchState == HIGH) {
-    recentRequest = 2;
     softwareSerial.write("dayplease");
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
-    if (recentRequest == 2) {
-      serialDayIn = softwareSerial.parseInt();
-      softwareSerial.write(serialDayIn);
-      if (serialDayIn > 0) {
-        startingDay = serialDayIn;
-        blinkLight(DAY_IS_BEING_SET_LED);
-        keepSoundingAlarmClock = true;
-        HoursMinutesDuration hoursMinutesDuration = calculateTimeLeftUntilAlarm(timeUntilWakeup);
-        writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
-        dayIsWeekendDay(startingDay);
-        recentRequest = 0;
-      }
+    int serialDayIn = softwareSerial.parseInt();
+    softwareSerial.write(serialDayIn);
+    if (serialDayIn > 0) {
+      startingDay = serialDayIn;
+      blinkLight(DAY_IS_BEING_SET_LED);
+      keepSoundingAlarmClock = true;
+      HoursMinutesDuration hoursMinutesDuration = calculateTimeLeftUntilAlarm(timeUntilWakeup);
+      writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
+      dayIsWeekendDay(startingDay);
     }
   }
 }
@@ -282,9 +277,10 @@ int calculateDayOfWeek(int theStartingDay) {
   return startingDayMinusOne + 1;
 }
 
-bool dayIsWeekendDay(int day) {
+bool dayIsWeekendDay(int theStartingDay) {
+  int currentDayOfWeek = calculateDayOfWeek(theStartingDay);
   for (int weekendDay = 0; weekendDay < (COUNT_WEEKEND_DAYS); weekendDay++) {
-    if (WEEKEND_DAYS[weekendDay] == day) {
+    if (WEEKEND_DAYS[weekendDay] == currentDayOfWeek) {
       if (!hasWrittenSofShavuahTov) {
         writeSofShavuahTov(lcd);
         hasWrittenSofShavuahTov = true;
@@ -295,9 +291,11 @@ bool dayIsWeekendDay(int day) {
   return false;
 }
 
-bool isTimeToSoundAlarm(long currentMillisWithinDay, int currentDayOfWeek) {
-  return currentMillisWithinDay >= timeUntilWakeup && currentMillisWithinDay < oneMinuteAfterWakeup
-         && !dayIsWeekendDay(currentDayOfWeek);
+bool isTimeToSoundAlarm(int theStartingDay) {
+  unsigned long currentMillisecondsWithinDay = millis() % ONE_DAY;
+  long oneMinuteAfterWakeup = timeUntilWakeup + ONE_MINUTE;
+  return currentMillisecondsWithinDay >= timeUntilWakeup && currentMillisecondsWithinDay < oneMinuteAfterWakeup
+         && !dayIsWeekendDay(theStartingDay);
 }
 
 HoursMinutesDuration calculateTimeLeftUntilAlarm(long theTimeUntilWakeup) {
