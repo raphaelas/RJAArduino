@@ -1,5 +1,3 @@
-#include "theconstants.h"
-
 int calculateDayOfWeek(int theStartingDay) {
   int mathUsableStartingDay = theStartingDay - 1;
   int startingDayMinusOne = (mathUsableStartingDay + (millis() / ONE_DAY)) % DAYS_IN_WEEK;
