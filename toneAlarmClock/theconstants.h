@@ -1,3 +1,6 @@
+#ifndef theconstants_h
+#define theconstants_h
+
 #include "weekdays.h"
 #include "pitches.h"
 #include "notedurations.h"
@@ -18,7 +21,8 @@ const int DELAY_DIVISOR = 10;
 // shutting itself down after ~15 seconds of low power output, we blink a bright LED every
 // 15 seconds.
 const int KEEP_POWERBANK_ALIVE_COOLDOWN = ONE_SECOND * 15;
-const int BRIEF_MOMENT = 50; int NOWISH = BRIEF_MOMENT;
+const int BRIEF_MOMENT = 50;
+const int NOWISH = BRIEF_MOMENT;
 const int LOW_SEVERITY_NOWISH = 5;
 
 // These two variables should be set through an SD card over serial communication
@@ -48,3 +52,5 @@ const int START_UP_NOTE_DURATIONS[] = {
 const float RECOMMENDED_NOTE_PAUSE_MULTIPLIER = 1.30;
 
 const int MAX_COUNTDOWN = 3;
+
+#endif

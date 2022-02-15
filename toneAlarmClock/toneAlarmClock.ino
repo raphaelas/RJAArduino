@@ -1,6 +1,6 @@
 #include "theconstants.h"
-#include "hebrewcharacterwriter.h"
-#include "timecalculations.h"
+#include "HebrewCharacterWriter.h"
+#include "TimeCalculations.h"
 #include "tonealarmclockglobalstatevariables.h"
 #include <SoftwareSerial.h>
 #include <LiquidCrystal.h>
@@ -26,6 +26,9 @@ const int LCD_D7_PIN = 2;
 SoftwareSerial softwareSerial(RX_PIN, TX_PIN);
 LiquidCrystal lcd(LCD_RS_PIN, LCD_E_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
 
+HebrewCharacterWriter hebrewCharacterWriter;
+TimeCalculations timeCalculations;
+
 void setup() {
   pinMode(KEEP_POWERBANK_ALIVE_LED, OUTPUT);
   pinMode(TIME_IS_BEING_SET_OR_POWERBANK_CHARGED_LED, OUTPUT);
@@ -44,23 +47,23 @@ void setup() {
 void loop() {
   keepPowerbankOn();
   listenToSwitches();
-  if (isTimeToSoundAlarm(timeUntilWakeup, startingDay) && keepSoundingAlarmClock) {
+  if (timeCalculations.isTimeToSoundAlarm(timeUntilWakeup, startingDay) && keepSoundingAlarmClock) {
     handleTimeToSoundAlarm();
-  } else if (isTimeToSoundAlarm(timeUntilWakeup, startingDay) && !keepSoundingAlarmClock) {
+  } else if (timeCalculations.isTimeToSoundAlarm(timeUntilWakeup, startingDay) && !keepSoundingAlarmClock) {
     handleInBetweenStopButtonPressAndAlarmTimeEnding();
-  } else if (!isTimeToSoundAlarm(timeUntilWakeup, startingDay)) {
+  } else if (!timeCalculations.isTimeToSoundAlarm(timeUntilWakeup, startingDay)) {
     handleNotTimeToSoundAlarm();
   }
 }
 
 void handleTimeToSoundAlarm() {
   if (!hasWrittenBokerTov) {
-    writeBokerTov(lcd);
+    hebrewCharacterWriter.writeBokerTov(lcd);
     hasWrittenBokerTov = true;
     hasResetLcdMessagePosition = false;
   }
   soundAlarm();
-  lcdScrollData = scrollLcdMessage(lcd, lcdScrollData);
+  lcdScrollData = hebrewCharacterWriter.scrollLcdMessage(lcd, lcdScrollData);
   keepPowerbankOnWhileAlarmSounding();
   splitDelayToCheckForSwitchPress(DELAY_BETWEEN_REPEATS);
 }
@@ -70,15 +73,15 @@ void handleNotTimeToSoundAlarm() {
   countdownBlinkLightWhileAlarmSounding = 0;
   hasWrittenBokerTov = false;
   if (!hasResetLcdMessagePosition) {
-    lcdScrollData = resetLcdMessagePosition(lcd, lcdScrollData);
+    lcdScrollData = hebrewCharacterWriter.resetLcdMessagePosition(lcd, lcdScrollData);
     hasResetLcdMessagePosition = true;
   }
-  if (dayIsWeekendDay(startingDay) && !hasWrittenSofShavuahTov) {
-    writeSofShavuahTov(lcd);
+  if (timeCalculations.dayIsWeekendDay(startingDay) && !hasWrittenSofShavuahTov) {
+    hebrewCharacterWriter.writeSofShavuahTov(lcd);
     hasWrittenSofShavuahTov = true;
-  } else if (!hasWrittenTimeUntilAlarmRecently && !dayIsWeekendDay(startingDay)) {
-    HoursMinutesDuration hoursMinutesDuration = calculateTimeLeftUntilAlarm(timeUntilWakeup);
-    writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
+  } else if (!hasWrittenTimeUntilAlarmRecently && !timeCalculations.dayIsWeekendDay(startingDay)) {
+    HoursMinutesDuration hoursMinutesDuration = timeCalculations.calculateTimeLeftUntilAlarm(timeUntilWakeup);
+    hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
     hasWrittenTimeUntilAlarmRecently = true;
   } else if (millis() % ONE_MINUTE < LOW_SEVERITY_NOWISH) {
     hasWrittenTimeUntilAlarmRecently = false;
@@ -87,7 +90,7 @@ void handleNotTimeToSoundAlarm() {
 
 void handleInBetweenStopButtonPressAndAlarmTimeEnding() {
   if (!hasResetLcdMessagePosition) {
-    lcdScrollData = resetLcdMessagePosition(lcd, lcdScrollData);
+    lcdScrollData = hebrewCharacterWriter.resetLcdMessagePosition(lcd, lcdScrollData);
     hasResetLcdMessagePosition = true;
   }
 }
@@ -99,7 +102,7 @@ void soundAlarm() {
       playNote(ALARM_NOTES[note], ALARM_NOTE_DURATIONS[note]);
     }
     if (note == (ALARM_NOTE_COUNT / 2)) {
-      lcdScrollData = scrollLcdMessage(lcd, lcdScrollData);
+      lcdScrollData = hebrewCharacterWriter.scrollLcdMessage(lcd, lcdScrollData);
     }
   }
 }
@@ -177,8 +180,8 @@ void listenToUpdateTimeSwitch() {
       timeUntilWakeup = serialTimeIn;
       blinkLight(TIME_IS_BEING_SET_OR_POWERBANK_CHARGED_LED);
       keepSoundingAlarmClock = true;
-      HoursMinutesDuration hoursMinutesDuration = calculateTimeLeftUntilAlarm(timeUntilWakeup);
-      writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
+      HoursMinutesDuration hoursMinutesDuration = timeCalculations.calculateTimeLeftUntilAlarm(timeUntilWakeup);
+      hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
     }
   }
 }
@@ -194,11 +197,11 @@ void listenToUpdateDaySwitch() {
       startingDay = serialDayIn;
       blinkLight(DAY_IS_BEING_SET_LED);
       keepSoundingAlarmClock = true;
-      HoursMinutesDuration hoursMinutesDuration = calculateTimeLeftUntilAlarm(timeUntilWakeup);
-      writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
-      boolean shouldWriteSofShavuahTov = dayIsWeekendDay(startingDay);
+      HoursMinutesDuration hoursMinutesDuration = timeCalculations.calculateTimeLeftUntilAlarm(timeUntilWakeup);
+      hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
+      boolean shouldWriteSofShavuahTov = timeCalculations.dayIsWeekendDay(startingDay);
       if (shouldWriteSofShavuahTov) {
-        writeSofShavuahTov(lcd);
+        hebrewCharacterWriter.writeSofShavuahTov(lcd);
         hasWrittenSofShavuahTov = true;
       }
     }
