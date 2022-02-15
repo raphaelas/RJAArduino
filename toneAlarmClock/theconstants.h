@@ -4,15 +4,9 @@
 #include "weekdays.h"
 #include "pitches.h"
 #include "notedurations.h"
+#include "timeconstants.h"
 
-const int ONE_SECOND = 1000;
-const int SECONDS_IN_MINUTE = 60, MINUTES_IN_HOUR = SECONDS_IN_MINUTE;
-const long ONE_MINUTE = long(ONE_SECOND) * SECONDS_IN_MINUTE;
-const long ONE_HOUR = ONE_MINUTE * MINUTES_IN_HOUR;
-const long ONE_DAY = ONE_HOUR * 24;
 const long THREE_DAYS = ONE_DAY * 3;
-
-const int WEEKEND_DAYS[] = {SATURDAY, SUNDAY};
 
 const int DELAY_BETWEEN_REPEATS = 500, DELAY_BETWEEN_SWITCH_LISTENS = DELAY_BETWEEN_REPEATS;
 const int DELAY_DIVISOR = 10;

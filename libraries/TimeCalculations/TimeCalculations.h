@@ -1,11 +1,10 @@
 #ifndef timecalculations_h
 #define timecalculations_h
 #include "Arduino.h"
-#include "theconstants.h"
 #include "HebrewCharacterWriter.h"
 
 class TimeCalculations {
-  
+
 public:
   TimeCalculations();
   bool dayIsWeekendDay(int theStartingDay);

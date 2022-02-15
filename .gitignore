@@ -1,4 +1,3 @@
-libraries
 gsmGetTime
 CardInfo/
 scratch1
@@ -6,3 +5,7 @@ update-bootloader-mkr1300-v3.14.0/
 var
 metadata
 fileRemover
+base64
+Keyboard
+MKRGSM
+readme.txt

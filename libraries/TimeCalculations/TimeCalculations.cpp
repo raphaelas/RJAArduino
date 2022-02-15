@@ -5,6 +5,8 @@
 
 #include "Arduino.h"
 #include "TimeCalculations.h"
+#include "weekdays.h"
+#include "timeconstants.h"
 
 const int DAYS_IN_WEEK = 7;
 const int COUNT_WEEKEND_DAYS = 2;
@@ -35,7 +37,7 @@ HoursMinutesDuration TimeCalculations::calculateTimeLeftUntilAlarm(long theTimeU
   }
   int hoursLeftUntilAlarm = millisecondsUntilWakeup / ONE_HOUR;
   int minutesLeftUntilAlarm = (millisecondsUntilWakeup / ONE_MINUTE) % MINUTES_IN_HOUR;
-  return (HoursMinutesDuration) {hoursLeftUntilAlarm, minutesLeftUntilAlarm};  
+  return (HoursMinutesDuration) {hoursLeftUntilAlarm, minutesLeftUntilAlarm};
 }
 
 int TimeCalculations::calculateDayOfWeek(int theStartingDay) {
