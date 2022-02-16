@@ -2,11 +2,7 @@
 #include "TimeCalculations.h"
 #include "weekdays.h"
 #include "timeconstants.h"
-
-struct HoursMinutesDuration {
-  int hours;
-  int minutes;
-};
+#include "tonealarmclockstructs.h"
 
 TimeCalculations::TimeCalculations() {}
 
