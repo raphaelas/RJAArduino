@@ -2,6 +2,9 @@
 #include "pitches.h"
 #include "notedurations.h"
 #include "timeconstants.h"
+#include "tonealarmclockstructs.h"
+
+struct LcdScrollData lcdScrollData = {true, 0};
 
 const long THREE_DAYS = ONE_DAY * 3;
 

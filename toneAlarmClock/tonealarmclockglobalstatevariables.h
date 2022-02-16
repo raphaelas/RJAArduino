@@ -1,17 +1,6 @@
 long timeUntilWakeup;
 int startingDay;
 
-struct LcdScrollData {
-  bool scrollLeft;
-  int scrollPositionCounter;
-};
-
-struct HoursMinutesDuration {
-  int hours;
-  int minutes;
-};
-
-struct LcdScrollData lcdScrollData = {true, 0};
 bool hasResetLcdMessagePosition = false;
 
 int stopAlarmSwitchState = 0;

@@ -1,7 +1,6 @@
 #ifndef timecalculations_h
 #define timecalculations_h
 #include "Arduino.h"
-#include "HebrewCharacterWriter.h"
 
 struct HoursMinutesDuration;
 
