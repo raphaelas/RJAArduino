@@ -1,6 +1,3 @@
-#ifndef theconstants_h
-#define theconstants_h
-
 #include "weekdays.h"
 #include "pitches.h"
 #include "notedurations.h"
@@ -46,5 +43,3 @@ const int START_UP_NOTE_DURATIONS[] = {
 const float RECOMMENDED_NOTE_PAUSE_MULTIPLIER = 1.30;
 
 const int MAX_COUNTDOWN = 3;
-
-#endif

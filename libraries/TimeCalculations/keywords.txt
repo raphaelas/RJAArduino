@@ -1,0 +1,5 @@
+TimeCalculations              KEYWORD1
+dayIsWeekendDay               KEYWORD2
+isTimeToSoundAlarm            KEYWORD2
+calculateTimeLeftUntilAlarm   KEYWORD2
+calculateDayOfWeek            KEYWORD2
