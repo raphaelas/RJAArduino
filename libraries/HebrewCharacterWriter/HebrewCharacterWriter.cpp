@@ -130,53 +130,44 @@ int HebrewCharacterWriter::getCharacter(int characterToSearch, int relevantChara
   return -1;
 }
 
-int HebrewCharacterWriter::setCharacter(int characterToSearch, int relevantCharacters[]) {
-  for (int i = 0; i < RELEVANT_CHARACTERS_COUNT; i++) {
-    if (characterToSearch == relevantCharacters[i]) {
-      return i;
-    }
-  }
-  return -1;
-}
-
 LiquidCrystal HebrewCharacterWriter::createLcdSpecialCharactersForBokerTov(LiquidCrystal lcd, int relevantCharacters[]) {
   int newCharacters[] = {BET, VAV, KUF, RESH, TET, FEY, ALEPH, LAMED};
   overwriteRelevantCharactersList(newCharacters, relevantCharacters);
-  lcd.createChar(setCharacter(BET, relevantCharacters), bet);
-  lcd.createChar(setCharacter(VAV, relevantCharacters), vav);
-  lcd.createChar(setCharacter(KUF, relevantCharacters), kuf);
-  lcd.createChar(setCharacter(RESH, relevantCharacters), resh);
-  lcd.createChar(setCharacter(TET, relevantCharacters), tet);
-  lcd.createChar(setCharacter(FEY, relevantCharacters), fey);
-  lcd.createChar(setCharacter(ALEPH, relevantCharacters), aleph);
-  lcd.createChar(setCharacter(LAMED, relevantCharacters), lamed);
+  lcd.createChar(getCharacter(BET, relevantCharacters), bet);
+  lcd.createChar(getCharacter(VAV, relevantCharacters), vav);
+  lcd.createChar(getCharacter(KUF, relevantCharacters), kuf);
+  lcd.createChar(getCharacter(RESH, relevantCharacters), resh);
+  lcd.createChar(getCharacter(TET, relevantCharacters), tet);
+  lcd.createChar(getCharacter(FEY, relevantCharacters), fey);
+  lcd.createChar(getCharacter(ALEPH, relevantCharacters), aleph);
+  lcd.createChar(getCharacter(LAMED, relevantCharacters), lamed);
   return lcd;
 }
 
 LiquidCrystal HebrewCharacterWriter::createLcdSpecialCharactersForSofShavuahTov(LiquidCrystal lcd, int relevantCharacters[]) {
   int newCharacters[] = {BET, VAV, TET, SHIN, SAMECH, FEYSOFIT, AYIN, 0};
   overwriteRelevantCharactersList(newCharacters, relevantCharacters);
-  lcd.createChar(setCharacter(BET, relevantCharacters), bet);
-  lcd.createChar(setCharacter(VAV, relevantCharacters), vav);
-  lcd.createChar(setCharacter(TET, relevantCharacters), tet);
-  lcd.createChar(setCharacter(SHIN, relevantCharacters), shin);
-  lcd.createChar(setCharacter(SAMECH, relevantCharacters), samech);
-  lcd.createChar(setCharacter(FEYSOFIT, relevantCharacters), feysofit);
-  lcd.createChar(setCharacter(AYIN, relevantCharacters), ayin);
+  lcd.createChar(getCharacter(BET, relevantCharacters), bet);
+  lcd.createChar(getCharacter(VAV, relevantCharacters), vav);
+  lcd.createChar(getCharacter(TET, relevantCharacters), tet);
+  lcd.createChar(getCharacter(SHIN, relevantCharacters), shin);
+  lcd.createChar(getCharacter(SAMECH, relevantCharacters), samech);
+  lcd.createChar(getCharacter(FEYSOFIT, relevantCharacters), feysofit);
+  lcd.createChar(getCharacter(AYIN, relevantCharacters), ayin);
   return lcd;
 }
 
 LiquidCrystal HebrewCharacterWriter::createLcdSpecialCharactersForTimeUntilAlarm(LiquidCrystal lcd, int relevantCharacters[]) {
   int newCharacters[] = {VAV, KUF, TET, SHIN, AYIN, TAF, DALET, HEY};
   overwriteRelevantCharactersList(newCharacters, relevantCharacters);
-  lcd.createChar(setCharacter(VAV, relevantCharacters), vav);
-  lcd.createChar(setCharacter(KUF, relevantCharacters), kuf);
-  lcd.createChar(setCharacter(TET, relevantCharacters), tet);
-  lcd.createChar(setCharacter(SHIN, relevantCharacters), shin);
-  lcd.createChar(setCharacter(AYIN, relevantCharacters), ayin);
-  lcd.createChar(setCharacter(TAF, relevantCharacters), taf);
-  lcd.createChar(setCharacter(DALET, relevantCharacters), dalet);
-  lcd.createChar(setCharacter(HEY, relevantCharacters), hey);
+  lcd.createChar(getCharacter(VAV, relevantCharacters), vav);
+  lcd.createChar(getCharacter(KUF, relevantCharacters), kuf);
+  lcd.createChar(getCharacter(TET, relevantCharacters), tet);
+  lcd.createChar(getCharacter(SHIN, relevantCharacters), shin);
+  lcd.createChar(getCharacter(AYIN, relevantCharacters), ayin);
+  lcd.createChar(getCharacter(TAF, relevantCharacters), taf);
+  lcd.createChar(getCharacter(DALET, relevantCharacters), dalet);
+  lcd.createChar(getCharacter(HEY, relevantCharacters), hey);
   return lcd;
 }
 
@@ -196,7 +187,7 @@ void HebrewCharacterWriter::writeShahot(LiquidCrystal lcd, int relevantCharacter
     lcd.setCursor(startingCursor - 2, 0);
     lcd.write(getCharacter(VAV, relevantCharacters));
     lcd.setCursor(startingCursor - 3, 0);
-    lcd.write(getCharacter(TAF, relevantCharacters));   
+    lcd.write(getCharacter(TAF, relevantCharacters));
   }
 }
 
@@ -211,6 +202,6 @@ void HebrewCharacterWriter::writeDakot(LiquidCrystal lcd, int relevantCharacters
     lcd.setCursor(startingCursor - 2, 0);
     lcd.write(getCharacter(VAV, relevantCharacters));
     lcd.setCursor(startingCursor - 3, 0);
-    lcd.write(getCharacter(TAF, relevantCharacters));    
+    lcd.write(getCharacter(TAF, relevantCharacters));
   }
 }

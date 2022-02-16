@@ -25,7 +25,6 @@ public:
 private:
   void overwriteRelevantCharactersList(int newCharacters[], int relevantCharacters[]);
   int getCharacter(int characterToSearch, int relevantCharacters[]);
-  int setCharacter(int characterToSearch, int relevantCharacters[]);
   LiquidCrystal createLcdSpecialCharactersForBokerTov(LiquidCrystal lcd, int relevantCharacters[]);
   LiquidCrystal createLcdSpecialCharactersForSofShavuahTov(LiquidCrystal lcd, int relevantCharacters[]);
   LiquidCrystal createLcdSpecialCharactersForTimeUntilAlarm(LiquidCrystal lcd, int relevantCharacters[]);
