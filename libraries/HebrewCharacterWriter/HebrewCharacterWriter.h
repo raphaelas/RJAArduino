@@ -3,15 +3,8 @@
 #include "Arduino.h"
 #include <LiquidCrystal.h>
 
-struct LcdScrollData {
-  bool scrollLeft;
-  int scrollPositionCounter;
-};
-
-struct HoursMinutesDuration {
-  int hours;
-  int minutes;
-};
+struct LcdScrollData;
+struct HoursMinutesDuration;
 
 class HebrewCharacterWriter {
 

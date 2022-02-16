@@ -3,6 +3,11 @@
 #include "weekdays.h"
 #include "timeconstants.h"
 
+struct HoursMinutesDuration {
+  int hours;
+  int minutes;
+};
+
 TimeCalculations::TimeCalculations() {}
 
 bool TimeCalculations::dayIsWeekendDay(int theStartingDay) {

@@ -1,8 +1,8 @@
 #include "theconstants.h"
-#include <HebrewCharacterWriter.h>
-#include <TimeCalculations.h>
 #include "tonealarmclockglobalstatevariables.h"
 #include "timeconstants.h"
+#include <HebrewCharacterWriter.h>
+#include <TimeCalculations.h>
 #include <SoftwareSerial.h>
 #include <LiquidCrystal.h>
 

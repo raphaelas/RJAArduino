@@ -3,6 +3,8 @@
 #include "Arduino.h"
 #include "HebrewCharacterWriter.h"
 
+struct HoursMinutesDuration;
+
 class TimeCalculations {
 
 public:

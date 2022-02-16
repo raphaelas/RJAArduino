@@ -5,6 +5,16 @@
 const int MAX_SCROLL_AMOUNT = 3;
 const int RELEVANT_CHARACTERS_COUNT = 8;
 
+struct LcdScrollData {
+  bool scrollLeft;
+  int scrollPositionCounter;
+};
+
+struct HoursMinutesDuration {
+  int hours;
+  int minutes;
+};
+
 HebrewCharacterWriter::HebrewCharacterWriter() {}
 
 void HebrewCharacterWriter::writeTimeLeftUntilAlarmToLcd(LiquidCrystal lcd, HoursMinutesDuration hoursMinutesDuration) {
