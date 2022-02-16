@@ -19,7 +19,6 @@ bool promptedForTime = false;
 bool promptedForDay = false;
 
 bool recentlySentSomething = false;
-int countdown = 30000;
 byte nextByte;
 String requestFromOtherArduino;
 
