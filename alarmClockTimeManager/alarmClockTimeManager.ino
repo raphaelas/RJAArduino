@@ -91,6 +91,7 @@ void setUpSerialCommunicators() {
 
 void writeNewTimeToFile() {
   if (!promptedForTime && !SD.exists(alarmTimeFileName)) {
+    Serial.println("python /home/raphaelastrow/Arduino/timeuntilalarm.py");
     Serial.println("Enter a time:");
     promptedForTime = true;
   }
