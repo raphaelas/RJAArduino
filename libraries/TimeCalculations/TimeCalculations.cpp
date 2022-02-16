@@ -1,8 +1,3 @@
-// This needs to be included after theconstants.h in toneAlarmClock because ONE_DAY,
-// WEEKEND_DAYS, and ONE_MINUTE are already declared there and used in toneAlarmClock.
-// This also needs to be included after hebrewcharacterwriter.h in toneAlarmClock
-// because HoursMinutesDuration is already declared there and used in toneAlarmClock.
-
 #include "Arduino.h"
 #include "TimeCalculations.h"
 #include "weekdays.h"
