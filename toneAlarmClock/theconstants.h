@@ -1,6 +1,4 @@
 #include "weekdays.h"
-#include "pitches.h"
-#include "notedurations.h"
 #include "timeconstants.h"
 #include "tonealarmclockstructs.h"
 
@@ -11,8 +9,6 @@ const int STARTER_STARTING_DAY = TUESDAY;
 
 struct LcdScrollData lcdScrollData = {true, 0};
 
-const long POWERBANK_LIFE = ONE_DAY * 3;
-
 const int DELAY_BETWEEN_REPEATS = 500, DELAY_BETWEEN_SWITCH_LISTENS = DELAY_BETWEEN_REPEATS;
 const int DELAY_DIVISOR = 10;
 
@@ -20,29 +16,9 @@ const int DELAY_DIVISOR = 10;
 // shutting itself down after ~15 seconds of low power output, we blink a bright LED every
 // 15 seconds.
 const int KEEP_POWERBANK_ALIVE_COOLDOWN = ONE_SECOND * 15;
+const long POWERBANK_LIFE = ONE_DAY * 3;
+const int ALARM_SOUNDING_POWERBANK_MAX_COUNTDOWN = 3;
+
 const int BRIEF_MOMENT = 50;
 const int NOWISH = BRIEF_MOMENT;
 const int LOW_SEVERITY_NOWISH = 5;
-
-const int ALARM_NOTE_COUNT = 9;
-const int STARTUP_NOTE_COUNT = 4;
-
-const int ALARM_NOTES[] = {
-  NOTE_C4, 0, NOTE_G3, NOTE_G3, NOTE_A3, NOTE_G3, 0, NOTE_B3, NOTE_C4
-};
-
-const int START_UP_NOTES[] = {
-  NOTE_G3, NOTE_A3, NOTE_B3, NOTE_C4
-};
-
-const int ALARM_NOTE_DURATIONS[] = {
-  EIGHTH, EIGHTH, EIGHTH, EIGHTH, QUARTER, QUARTER, QUARTER, QUARTER, QUARTER
-};
-
-const int START_UP_NOTE_DURATIONS[] = {
-  EIGHTH, EIGHTH, EIGHTH, EIGHTH
-};
-
-const float RECOMMENDED_NOTE_PAUSE_MULTIPLIER = 1.30;
-
-const int MAX_COUNTDOWN = 3;

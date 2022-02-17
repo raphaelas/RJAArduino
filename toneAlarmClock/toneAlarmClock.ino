@@ -1,6 +1,8 @@
+#include "musicalconstants.h"
 #include "theconstants.h"
 #include "tonealarmclockglobalstatevariables.h"
 #include "timeconstants.h"
+
 #include <HebrewCharacterWriter.h>
 #include <TimeCalculations.h>
 #include <SoftwareSerial.h>
@@ -130,7 +132,7 @@ void blinkLight(int lightNumber) {
 void keepPowerbankOnWhileAlarmSounding() {
   if (countdownBlinkLightWhileAlarmSounding == 0) {
     blinkLight(determineCorrectIndicatorLight(powerbankChargedCheckpoint));
-    countdownBlinkLightWhileAlarmSounding = MAX_COUNTDOWN;
+    countdownBlinkLightWhileAlarmSounding = ALARM_SOUNDING_POWERBANK_MAX_COUNTDOWN;
   } else {
     countdownBlinkLightWhileAlarmSounding--;
   }
