@@ -109,9 +109,8 @@ void soundAlarm() {
 }
 
 void playNote(int noteToPlay, int noteDuration) {
-  int noteDurationMilliseconds = ONE_SECOND / noteDuration;
-  tone(PIEZO_PIN, noteToPlay, noteDurationMilliseconds);
-  int pauseBetweenNotes = noteDurationMilliseconds * RECOMMENDED_NOTE_PAUSE_MULTIPLIER;
+  tone(PIEZO_PIN, noteToPlay, noteDuration);
+  int pauseBetweenNotes = noteDuration * RECOMMENDED_NOTE_PAUSE_MULTIPLIER;
   splitDelayToCheckForSwitchPress(pauseBetweenNotes);
   noTone(PIEZO_PIN);
 }
@@ -145,7 +144,7 @@ void keepPowerbankOn() {
 }
 
 int determineCorrectIndicatorLight(unsigned long thePowerbankChargedCheckpoint) {
-  long timeLeftForPowerbank = (thePowerbankChargedCheckpoint + THREE_DAYS) - millis();
+  long timeLeftForPowerbank = (thePowerbankChargedCheckpoint + POWERBANK_LIFE) - millis();
   if (timeLeftForPowerbank > 0) {
     return KEEP_POWERBANK_ALIVE_LED;
   } else {
