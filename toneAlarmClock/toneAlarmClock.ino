@@ -64,7 +64,9 @@ void handleTimeToSoundAlarm() {
     hasWrittenBokerTov = true;
     hasResetLcdMessagePosition = false;
   }
-  soundAlarm();
+  soundAlarm(0, ALARM_NOTE_COUNT / 2);
+  lcdScrollData = hebrewCharacterWriter.scrollLcdMessage(lcd, lcdScrollData);
+  soundAlarm(ALARM_NOTE_COUNT / 2, ALARM_NOTE_COUNT);
   lcdScrollData = hebrewCharacterWriter.scrollLcdMessage(lcd, lcdScrollData);
   keepPowerbankOnWhileAlarmSounding();
   splitDelayToCheckForSwitchPress(DELAY_BETWEEN_REPEATS);
@@ -97,14 +99,11 @@ void handleInBetweenStopButtonPressAndAlarmTimeEnding() {
   }
 }
 
-void soundAlarm() {
-  for (int note = 0; note < ALARM_NOTE_COUNT; note++) {
+void soundAlarm(int startingNote, int endingNote) {
+  for (int note = startingNote; note < endingNote; note++) {
     checkStopAlarmSwitchState();
     if (keepSoundingAlarmClock) {
       playNote(ALARM_NOTES[note], ALARM_NOTE_DURATIONS[note]);
-    }
-    if (note == (ALARM_NOTE_COUNT / 2)) {
-      lcdScrollData = hebrewCharacterWriter.scrollLcdMessage(lcd, lcdScrollData);
     }
   }
 }
