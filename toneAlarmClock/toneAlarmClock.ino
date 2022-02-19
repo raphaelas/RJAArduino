@@ -4,7 +4,6 @@
 #include "musicalconstants.h"
 #include <HebrewCharacterWriter.h>
 #include <TimeCalculations.h>
-#include <SoftwareSerial.h>
 #include <LiquidCrystal.h>
 
 const int STOP_ALARM_SWITCH = A3;
@@ -25,11 +24,14 @@ const int LCD_D5_PIN = 4;
 const int LCD_D6_PIN = 3;
 const int LCD_D7_PIN = 2;
 
-SoftwareSerial softwareSerial(RX_PIN, TX_PIN);
 LiquidCrystal lcd(LCD_RS_PIN, LCD_E_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
 
 HebrewCharacterWriter hebrewCharacterWriter;
 TimeCalculations timeCalculations;
+
+void setUpSerialCommunicator() {
+  Serial1.begin(9600);
+}
 
 void setup() {
   pinMode(KEEP_POWERBANK_ALIVE_LED, OUTPUT);
@@ -40,7 +42,6 @@ void setup() {
   pinMode(POWERBANK_CHARGED_SWITCH, INPUT);
   pinMode(UPDATE_TIME_SWITCH, INPUT);
   pinMode(UPDATE_DAY_SWITCH, INPUT);
-  softwareSerial.begin(38400);
   timeUntilWakeup = STARTER_WAKEUP_TIME;
   startingDay = STARTER_STARTING_DAY;
   playStartUpNotes();
@@ -173,9 +174,9 @@ void checkPowerbankChargedSwitchState() {
 void listenToUpdateTimeSwitch() {
   updateTimeSwitchState = digitalRead(UPDATE_TIME_SWITCH);
   if (updateTimeSwitchState == HIGH) {
-    softwareSerial.write("timeplease");
+    Serial1.write("timeplease");
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
-    long serialTimeIn = softwareSerial.parseInt();
+    long serialTimeIn = Serial1.parseInt();
     if (serialTimeIn > 0) {
       timeUntilWakeup = serialTimeIn;
       blinkLight(TIME_IS_BEING_SET_OR_POWERBANK_CHARGED_LED);
@@ -189,10 +190,10 @@ void listenToUpdateTimeSwitch() {
 void listenToUpdateDaySwitch() {
   updateDaySwitchState = digitalRead(UPDATE_DAY_SWITCH);
   if (updateDaySwitchState == HIGH) {
-    softwareSerial.write("dayplease");
+    Serial1.write("dayplease");
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
-    int serialDayIn = softwareSerial.parseInt();
-    softwareSerial.write(serialDayIn);
+    int serialDayIn = Serial1.parseInt();
+    Serial1.write(serialDayIn);
     if (serialDayIn > 0) {
       startingDay = serialDayIn;
       blinkLight(DAY_IS_BEING_SET_LED);
