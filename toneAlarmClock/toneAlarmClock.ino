@@ -192,7 +192,6 @@ void listenToUpdateDaySwitch() {
     softwareSerial.write("dayplease");
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
     int serialDayIn = softwareSerial.parseInt();
-    softwareSerial.write(serialDayIn);
     if (serialDayIn > 0) {
       startingDay = serialDayIn;
       blinkLight(DAY_IS_BEING_SET_LED);
