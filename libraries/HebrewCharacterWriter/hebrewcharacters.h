@@ -1,21 +1,25 @@
-#define BET      1
-#define VAV      2
-#define KUF      3
-#define RESH     4
-#define TET      5
-#define FEY      6
-#define ALEPH    7
-#define LAMED    8
-#define SHIN     9
-#define SAMECH   10
-#define FEYSOFIT 11
-#define AYIN     12
-#define TAF      13
-#define DALET    14
-#define HEY      15
+#define BET         1
+#define VAV         2
+#define KUF         3
+#define RESH        4
+#define TET         5
+#define FEY         6
+#define ALEPH       7
+#define LAMED       8
+#define SHIN        9
+#define SAMECH      10
+#define FEYSOFIT    11
+#define AYIN        12
+#define TAF         13
+#define DALET       14
+#define HEY         15
+#define CHET        16
+#define GIMEL       17
+#define MEM         18
+#define CHAFSOFIT   19
 
-// Characters generated with help from the LCD Custom Character Generator 
-// available at https://maxpromer.github.io/LCD-Character-Creator/
+// Characters generated with help from the LCD Custom Character Generator
+// available at https://maxpromer.github.io/LCD-Character-Creator
 
 byte bet[] = {
   B00000,
@@ -178,6 +182,50 @@ byte hey[] = {
   B01001,
   B01001,
   B01001,
+  B00000,
+  B00000
+};
+
+byte chet[] = {
+  B00000,
+  B01100,
+  B01010,
+  B01010,
+  B01010,
+  B01010,
+  B00000,
+  B00000
+};
+
+byte gimel[] = {
+  B00000,
+  B00010,
+  B00010,
+  B00110,
+  B01000,
+  B00110,
+  B00000,
+  B00000
+};
+
+byte mem[] = {
+  B00000,
+  B01010,
+  B01101,
+  B01001,
+  B01001,
+  B01001,
+  B00000,
+  B00000
+};
+
+byte chafsofit[] = {
+  B00000,
+  B01100,
+  B00010,
+  B01100,
+  B01000,
+  B01000,
   B00000,
   B00000
 };

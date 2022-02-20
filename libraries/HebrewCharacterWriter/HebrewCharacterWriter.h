@@ -13,6 +13,7 @@ public:
   void writeTimeLeftUntilAlarmToLcd(LiquidCrystal lcd, HoursMinutesDuration hoursMinutesDuration);
   void writeBokerTov(LiquidCrystal lcd);
   void writeSofShavuahTov(LiquidCrystal lcd);
+  void writeChagSameach(LiquidCrystal lcd);
   LcdScrollData scrollLcdMessage(LiquidCrystal lcd, LcdScrollData lcdScrollData);
   LcdScrollData resetLcdMessagePosition(LiquidCrystal lcd, LcdScrollData lcdScrollData);
 private:
@@ -20,6 +21,7 @@ private:
   int getCharacter(int characterToSearch, int relevantCharacters[]);
   LiquidCrystal createLcdSpecialCharactersForBokerTov(LiquidCrystal lcd, int relevantCharacters[]);
   LiquidCrystal createLcdSpecialCharactersForSofShavuahTov(LiquidCrystal lcd, int relevantCharacters[]);
+  LiquidCrystal createLcdSpecialCharactersForChagSameach(LiquidCrystal lcd, int relevantCharacters[]);
   LiquidCrystal createLcdSpecialCharactersForTimeUntilAlarm(LiquidCrystal lcd, int relevantCharacters[]);
   void writeHey(LiquidCrystal lcd, int startingCursor, int relevantCharacters[]);
   void writeShahot(LiquidCrystal lcd, int relevantCharacters[], int startingCursor, bool singular);

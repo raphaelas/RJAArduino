@@ -86,6 +86,23 @@ void HebrewCharacterWriter::writeSofShavuahTov(LiquidCrystal lcd) {
   lcd.write(getCharacter(BET, relevantCharacters));
 }
 
+void HebrewCharacterWriter::writeChagSameach(LiquidCrystal lcd) {
+  int relevantCharacters[RELEVANT_CHARACTERS_COUNT];
+  lcd = createLcdSpecialCharactersForChagSameach(lcd, relevantCharacters);
+  lcd.begin(16, 2);
+  lcd.clear();
+  lcd.setCursor(15, 0);
+  lcd.write(getCharacter(CHET, relevantCharacters));
+  lcd.setCursor(14, 0);
+  lcd.write(getCharacter(GIMEL, relevantCharacters));
+  lcd.setCursor(12, 0);
+  lcd.write(getCharacter(SHIN, relevantCharacters));
+  lcd.setCursor(11, 0);
+  lcd.write(getCharacter(MEM, relevantCharacters));
+  lcd.setCursor(10, 0);
+  lcd.write(getCharacter(CHAFSOFIT, relevantCharacters));
+}
+
 LcdScrollData HebrewCharacterWriter::scrollLcdMessage(LiquidCrystal lcd, LcdScrollData lcdScrollData) {
   bool scrollLeft = lcdScrollData.scrollLeft;
   int scrollPositionCounter = lcdScrollData.scrollPositionCounter;
@@ -155,6 +172,17 @@ LiquidCrystal HebrewCharacterWriter::createLcdSpecialCharactersForSofShavuahTov(
   lcd.createChar(getCharacter(SAMECH, relevantCharacters), samech);
   lcd.createChar(getCharacter(FEYSOFIT, relevantCharacters), feysofit);
   lcd.createChar(getCharacter(AYIN, relevantCharacters), ayin);
+  return lcd;
+}
+
+LiquidCrystal HebrewCharacterWriter::createLcdSpecialCharactersForChagSameach(LiquidCrystal lcd, int relevantCharacters[]) {
+  int newCharacters[] = {CHET, GIMEL, SHIN, MEM, CHAFSOFIT, 0, 0, 0};
+  overwriteRelevantCharactersList(newCharacters, relevantCharacters);
+  lcd.createChar(getCharacter(CHET, relevantCharacters), chet);
+  lcd.createChar(getCharacter(GIMEL, relevantCharacters), gimel);
+  lcd.createChar(getCharacter(SHIN, relevantCharacters), shin);
+  lcd.createChar(getCharacter(MEM, relevantCharacters), mem);
+  lcd.createChar(getCharacter(CHAFSOFIT, relevantCharacters), chafsofit);
   return lcd;
 }
 
