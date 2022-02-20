@@ -7,10 +7,6 @@ if now.hour >= 8:
     tomorrow = now + timedelta(days=1)
 tomorrowWeekday = tomorrow.weekday() 
 print(tomorrowWeekday + 1)
-if tomorrowWeekday == 5:
-    tomorrow += timedelta(days=2)
-elif tomorrowWeekday == 6:
-    tomorrow += timedelta(days=1)
 tomorrowDay = tomorrow.day
 tomorrowMonth = tomorrow.month
 tomorrowYear = tomorrow.year
