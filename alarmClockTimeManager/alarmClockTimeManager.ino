@@ -27,22 +27,24 @@ const int SERIAL_MONITOR_STARTUP_DELAY = 3000;
 void setup() {
   setUpSerialCommunicators();
   initializeSdCard();
-  for (int file = 0; file < FILE_COUNT; file++) {
-    String fileName = FILES_TO_REMOVE[file];
-    if (SD.exists(fileName)) {
-      Serial.println(fileName + " exists.");
-      printTheFileBeforeDeletingIt(fileName);
-      removeTheFile(fileName);
-    } else {
-      Serial.println(fileName + " does not exist.");
+  if (Serial) {
+    for (int file = 0; file < FILE_COUNT; file++) {
+      String fileName = FILES_TO_REMOVE[file];
+      if (SD.exists(fileName)) {
+        Serial.println(fileName + " exists.");
+        printTheFileBeforeDeletingIt(fileName);
+        removeTheFile(fileName);
+      } else {
+        Serial.println(fileName + " does not exist.");
+      }
     }
   }
 }
 
 void loop() {
-  if (!timeSet) {
+  if (Serial && !timeSet) {
     writeNewTimeToFile();
-  } else if (!daySet) {
+  } else if (Serial && !daySet) {
     writeNewDayToFile();
   }
   listenForTriggerFromOtherArduino();
