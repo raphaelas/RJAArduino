@@ -29,10 +29,6 @@ LiquidCrystal lcd(LCD_RS_PIN, LCD_E_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD
 HebrewCharacterWriter hebrewCharacterWriter;
 TimeCalculations timeCalculations;
 
-void setUpSerialCommunicator() {
-  Serial1.begin(9600);
-}
-
 void setup() {
   pinMode(KEEP_POWERBANK_ALIVE_LED, OUTPUT);
   pinMode(TIME_IS_BEING_SET_OR_POWERBANK_CHARGED_LED, OUTPUT);
@@ -42,6 +38,7 @@ void setup() {
   pinMode(POWERBANK_CHARGED_SWITCH, INPUT);
   pinMode(UPDATE_TIME_SWITCH, INPUT);
   pinMode(UPDATE_DAY_SWITCH, INPUT);
+  setUpSerialCommunicator();
   timeUntilWakeup = STARTER_WAKEUP_TIME;
   startingDay = STARTER_STARTING_DAY;
   playStartUpNotes();
@@ -57,6 +54,11 @@ void loop() {
   } else if (!timeCalculations.isTimeToSoundAlarm(timeUntilWakeup, startingDay)) {
     handleNotTimeToSoundAlarm();
   }
+}
+
+void setUpSerialCommunicator() {
+  Serial.begin(9600);
+  Serial1.begin(9600);
 }
 
 void handleTimeToSoundAlarm() {
@@ -174,6 +176,7 @@ void checkPowerbankChargedSwitchState() {
 void listenToUpdateTimeSwitch() {
   updateTimeSwitchState = digitalRead(UPDATE_TIME_SWITCH);
   if (updateTimeSwitchState == HIGH) {
+    Serial.println("whoa");
     Serial1.write("timeplease");
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
     long serialTimeIn = Serial1.parseInt();
@@ -190,10 +193,10 @@ void listenToUpdateTimeSwitch() {
 void listenToUpdateDaySwitch() {
   updateDaySwitchState = digitalRead(UPDATE_DAY_SWITCH);
   if (updateDaySwitchState == HIGH) {
+    Serial.println("whoa2");
     Serial1.write("dayplease");
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
     int serialDayIn = Serial1.parseInt();
-    Serial1.write(serialDayIn);
     if (serialDayIn > 0) {
       startingDay = serialDayIn;
       blinkLight(DAY_IS_BEING_SET_LED);
