@@ -8,6 +8,7 @@ const int FILE_COUNT = 2;
 const String FILES_TO_REMOVE[] = {alarmTimeFileName, alarmDayFileName};
 const int MAX_FILE_SIZE = 12;
 const int SERIAL_MONITOR_STARTUP_DELAY = 3000;
+const int BUILTIN_LED_ON_TIME = 10;
 
 bool alreadySentTimeToSerial1 = true;
 bool alreadySentDayToSerial1 = true;
@@ -19,6 +20,7 @@ bool promptedForDay = false;
 void setup() {
   setUpSerialCommunicators();
   initializeSdCard();
+  pinMode(LED_BUILTIN, OUTPUT);
   if (Serial) {
     for (int file = 0; file < FILE_COUNT; file++) {
       String fileName = FILES_TO_REMOVE[file];
@@ -166,6 +168,9 @@ void sendDayToOtherArduino() {
 void listenForTriggerFromOtherArduino() {
   if (Serial1.available()) {
     String requestFromOtherArduino = Serial1.readString();
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(BUILTIN_LED_ON_TIME);
+    digitalWrite(LED_BUILTIN, LOW);
     Serial.println(requestFromOtherArduino);
     if (requestFromOtherArduino.equals("timeplease")) {
       alreadySentTimeToSerial1 = false;

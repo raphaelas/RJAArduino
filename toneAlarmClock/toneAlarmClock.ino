@@ -7,14 +7,14 @@
 #include <SoftwareSerial.h>
 #include <LiquidCrystal.h>
 
-const int STOP_ALARM_SWITCH = A3;
+const int STOP_ALARM_OR_SET_HOLIDAY_SWITCH = A3;
 const int POWERBANK_CHARGED_SWITCH = A2;
 const int UPDATE_TIME_SWITCH = A1;
 const int UPDATE_DAY_SWITCH = A0;
 const int KEEP_POWERBANK_ALIVE_LED = 6;
 const int TIME_IS_BEING_SET_OR_POWERBANK_CHARGED_LED = 7;
 const int PIEZO_PIN = 8;
-const int POWERBANK_IS_LOW_LED = 9;
+const int POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED = 9;
 const int RX_PIN = 10;
 const int TX_PIN = 11;
 const int DAY_IS_BEING_SET_LED = 12;
@@ -34,9 +34,9 @@ TimeCalculations timeCalculations;
 void setup() {
   pinMode(KEEP_POWERBANK_ALIVE_LED, OUTPUT);
   pinMode(TIME_IS_BEING_SET_OR_POWERBANK_CHARGED_LED, OUTPUT);
-  pinMode(POWERBANK_IS_LOW_LED, OUTPUT);
+  pinMode(POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED, OUTPUT);
   pinMode(DAY_IS_BEING_SET_LED, OUTPUT);
-  pinMode(STOP_ALARM_SWITCH, INPUT);
+  pinMode(STOP_ALARM_OR_SET_HOLIDAY_SWITCH, INPUT);
   pinMode(POWERBANK_CHARGED_SWITCH, INPUT);
   pinMode(UPDATE_TIME_SWITCH, INPUT);
   pinMode(UPDATE_DAY_SWITCH, INPUT);
@@ -101,7 +101,7 @@ void handleInBetweenStopButtonPressAndAlarmTimeEnding() {
 
 void soundAlarm(int startingNote, int endingNote) {
   for (int note = startingNote; note < endingNote; note++) {
-    checkStopAlarmSwitchState();
+    checkStopAlarmOrSetHolidaySwitchState();
     if (keepSoundingAlarmClock) {
       playNote(ALARM_NOTES[note], ALARM_NOTE_DURATIONS[note]);
     }
@@ -148,13 +148,13 @@ int determineCorrectIndicatorLight(unsigned long thePowerbankChargedCheckpoint) 
   if (timeLeftForPowerbank > 0) {
     return KEEP_POWERBANK_ALIVE_LED;
   } else {
-    return POWERBANK_IS_LOW_LED;
+    return POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED;
   }
 }
 
-void checkStopAlarmSwitchState() {
-  stopAlarmSwitchState = digitalRead(STOP_ALARM_SWITCH);
-  if (stopAlarmSwitchState == HIGH) {
+void checkStopAlarmOrSetHolidaySwitchState() {
+  stopAlarmOrSetHolidaySwitchState = digitalRead(STOP_ALARM_OR_SET_HOLIDAY_SWITCH);
+  if (stopAlarmOrSetHolidaySwitchState == HIGH) {
     if (timeCalculations.isTimeToSoundAlarm(timeUntilWakeup, startingDay, isHoliday)) {
       keepSoundingAlarmClock = false;
       blinkLight(determineCorrectIndicatorLight(powerbankChargedCheckpoint));
@@ -193,7 +193,7 @@ void listenToUpdateTimeSwitch() {
       HoursMinutesDuration hoursMinutesDuration = timeCalculations.calculateTimeLeftUntilAlarm(timeUntilWakeup);
       hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
     } else {
-      blinkLight(POWERBANK_IS_LOW_LED);
+      blinkLight(POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED);
     }
   }
 }
@@ -217,13 +217,13 @@ void listenToUpdateDaySwitch() {
         hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
       }
     } else {
-      blinkLight(POWERBANK_IS_LOW_LED);
+      blinkLight(POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED);
     }
   }
 }
 
 void listenToSwitches() {
-  checkStopAlarmSwitchState();
+  checkStopAlarmOrSetHolidaySwitchState();
   listenToUpdateTimeSwitch();
   listenToUpdateDaySwitch();
   checkPowerbankChargedSwitchState();

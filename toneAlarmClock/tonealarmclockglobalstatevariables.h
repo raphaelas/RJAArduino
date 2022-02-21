@@ -3,7 +3,7 @@ static int startingDay;
 
 bool hasResetLcdMessagePosition = false;
 
-int stopAlarmSwitchState = 0;
+int stopAlarmOrSetHolidaySwitchState = 0;
 int updateTimeSwitchState = 0;
 int updateDaySwitchState = 0;
 int powerbankChargedSwitchState = 0;
