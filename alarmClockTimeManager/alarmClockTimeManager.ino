@@ -80,7 +80,7 @@ void initializeSdCard() {
 
 void setUpSerialCommunicators() {
   Serial1.begin(38400);
-//  Serial.begin(9600);
+  Serial.begin(9600);  // Interestingly, this line might not be needed.
   delay(SERIAL_MONITOR_STARTUP_DELAY);
 }
 

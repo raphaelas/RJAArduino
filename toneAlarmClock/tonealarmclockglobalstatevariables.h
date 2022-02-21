@@ -1,5 +1,5 @@
-static long timeUntilWakeup;
-static int startingDay;
+long timeUntilWakeup;
+int startingDay;
 
 bool hasResetLcdMessagePosition = false;
 
