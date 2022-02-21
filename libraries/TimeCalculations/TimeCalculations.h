@@ -9,7 +9,7 @@ class TimeCalculations {
 public:
   TimeCalculations();
   bool dayIsWeekendDay(int theStartingDay);
-  bool isTimeToSoundAlarm(long theTimeUntilWakeup, int theStartingDay);
+  bool isTimeToSoundAlarm(long theTimeUntilWakeup, int theStartingDay, bool isHoliday);
   HoursMinutesDuration calculateTimeLeftUntilAlarm(long theTimeUntilWakeup);
 private:
   int calculateDayOfWeek(int theStartingDay);

@@ -49,11 +49,11 @@ void setup() {
 void loop() {
   keepPowerbankOn();
   listenToSwitches();
-  if (timeCalculations.isTimeToSoundAlarm(timeUntilWakeup, startingDay) && keepSoundingAlarmClock) {
+  if (timeCalculations.isTimeToSoundAlarm(timeUntilWakeup, startingDay, isHoliday) && keepSoundingAlarmClock) {
     handleTimeToSoundAlarm();
-  } else if (timeCalculations.isTimeToSoundAlarm(timeUntilWakeup, startingDay) && !keepSoundingAlarmClock) {
+  } else if (timeCalculations.isTimeToSoundAlarm(timeUntilWakeup, startingDay, isHoliday) && !keepSoundingAlarmClock) {
     handleInBetweenStopButtonPressAndAlarmTimeEnding();
-  } else if (!timeCalculations.isTimeToSoundAlarm(timeUntilWakeup, startingDay)) {
+  } else if (!timeCalculations.isTimeToSoundAlarm(timeUntilWakeup, startingDay, isHoliday)) {
     handleNotTimeToSoundAlarm();
   }
 }
@@ -83,7 +83,7 @@ void handleNotTimeToSoundAlarm() {
   if (timeCalculations.dayIsWeekendDay(startingDay) && !hasWrittenSofShavuahTov) {
     hebrewCharacterWriter.writeSofShavuahTov(lcd);
     hasWrittenSofShavuahTov = true;
-  } else if (!hasWrittenTimeUntilAlarmRecently && !timeCalculations.dayIsWeekendDay(startingDay)) {
+  } else if (!hasWrittenTimeUntilAlarmRecently && !timeCalculations.dayIsWeekendDay(startingDay) && !isHoliday) {
     HoursMinutesDuration hoursMinutesDuration = timeCalculations.calculateTimeLeftUntilAlarm(timeUntilWakeup);
     hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
     hasWrittenTimeUntilAlarmRecently = true;
@@ -155,8 +155,18 @@ int determineCorrectIndicatorLight(unsigned long thePowerbankChargedCheckpoint) 
 void checkStopAlarmSwitchState() {
   stopAlarmSwitchState = digitalRead(STOP_ALARM_SWITCH);
   if (stopAlarmSwitchState == HIGH) {
-    keepSoundingAlarmClock = false;
-    blinkLight(determineCorrectIndicatorLight(powerbankChargedCheckpoint));
+    if (timeCalculations.isTimeToSoundAlarm(timeUntilWakeup, startingDay, isHoliday)) {
+      keepSoundingAlarmClock = false;
+      blinkLight(determineCorrectIndicatorLight(powerbankChargedCheckpoint));
+    } else {
+      isHoliday = !isHoliday;
+      if (isHoliday) {
+        hebrewCharacterWriter.writeChagSameach(lcd);
+      } else {
+        HoursMinutesDuration hoursMinutesDuration = timeCalculations.calculateTimeLeftUntilAlarm(timeUntilWakeup);
+        hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
+      }
+    }
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
   }
 }
@@ -209,6 +219,7 @@ void listenToUpdateDaySwitch() {
 }
 
 void listenToSwitches() {
+  checkStopAlarmSwitchState();
   listenToUpdateTimeSwitch();
   listenToUpdateDaySwitch();
   checkPowerbankChargedSwitchState();
@@ -217,7 +228,6 @@ void listenToSwitches() {
 void splitDelayToCheckForSwitchPress(int delayAmount) {
   for (int i = 0; i < DELAY_DIVISOR; i++) {
     delay(delayAmount / DELAY_DIVISOR);
-    checkStopAlarmSwitchState();
     listenToSwitches();
   }
 }
