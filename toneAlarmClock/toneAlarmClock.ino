@@ -192,6 +192,8 @@ void listenToUpdateTimeSwitch() {
       keepSoundingAlarmClock = true;
       HoursMinutesDuration hoursMinutesDuration = timeCalculations.calculateTimeLeftUntilAlarm(timeUntilWakeup);
       hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
+    } else {
+      blinkLight(POWERBANK_IS_LOW_LED);
     }
   }
 }
@@ -214,6 +216,8 @@ void listenToUpdateDaySwitch() {
         HoursMinutesDuration hoursMinutesDuration = timeCalculations.calculateTimeLeftUntilAlarm(timeUntilWakeup);
         hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
       }
+    } else {
+      blinkLight(POWERBANK_IS_LOW_LED);
     }
   }
 }
