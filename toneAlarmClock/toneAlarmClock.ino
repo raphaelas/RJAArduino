@@ -187,7 +187,7 @@ void listenToUpdateTimeSwitch() {
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
     long serialTimeIn = softwareSerial.parseInt();
     if (serialTimeIn > 0) {
-      timeUntilWakeup = serialTimeIn;
+      timeUntilWakeup = (serialTimeIn + millis()) % ONE_DAY;
       blinkLight(TIME_IS_BEING_SET_OR_POWERBANK_CHARGED_LED);
       keepSoundingAlarmClock = true;
       HoursMinutesDuration hoursMinutesDuration = timeCalculations.calculateTimeLeftUntilAlarm(timeUntilWakeup);
