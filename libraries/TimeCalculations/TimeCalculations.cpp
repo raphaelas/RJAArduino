@@ -23,6 +23,12 @@ bool TimeCalculations::dayIsWeekendDay(int theStartingDay) {
   return false;
 }
 
+int TimeCalculations::calculateDayOfWeek(int theStartingDay) {
+  int mathUsableStartingDay = theStartingDay - 1;
+  int startingDayMinusOne = (mathUsableStartingDay + (millis() / ONE_DAY)) % DAYS_IN_WEEK;
+  return startingDayMinusOne + 1;
+}
+
 HoursMinutesDuration TimeCalculations::calculateTimeLeftUntilAlarm(long theTimeUntilWakeup) {
   long millisecondsUntilWakeup = theTimeUntilWakeup - (millis() % ONE_DAY);
   if (millisecondsUntilWakeup < 0) {
@@ -33,8 +39,6 @@ HoursMinutesDuration TimeCalculations::calculateTimeLeftUntilAlarm(long theTimeU
   return (HoursMinutesDuration) {hoursLeftUntilAlarm, minutesLeftUntilAlarm};
 }
 
-int TimeCalculations::calculateDayOfWeek(int theStartingDay) {
-  int mathUsableStartingDay = theStartingDay - 1;
-  int startingDayMinusOne = (mathUsableStartingDay + (millis() / ONE_DAY)) % DAYS_IN_WEEK;
-  return startingDayMinusOne + 1;
+bool TimeCalculations::isTimeLeftForPowerbank(int thePowerbankChargedIteration, long thePowerbankChargedCheckpoint) {
+  return millis() / POWERBANK_LIFE > thePowerbankChargedIteration && millis() % POWERBANK_LIFE > thePowerbankChargedCheckpoint;
 }

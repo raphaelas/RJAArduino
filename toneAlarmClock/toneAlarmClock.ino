@@ -129,7 +129,8 @@ void blinkLight(int lightNumber) {
 
 void keepPowerbankOnWhileAlarmSounding() {
   if (countdownBlinkLightWhileAlarmSounding == 0) {
-    blinkLight(determineCorrectIndicatorLight(powerbankChargedCheckpoint));
+    bool isTimeLeftForPowerbank = timeCalculations.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
+    blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
     countdownBlinkLightWhileAlarmSounding = ALARM_SOUNDING_POWERBANK_MAX_COUNTDOWN;
   } else {
     countdownBlinkLightWhileAlarmSounding--;
@@ -137,15 +138,15 @@ void keepPowerbankOnWhileAlarmSounding() {
 }
 
 void keepPowerbankOn() {
-  unsigned long currentMillisWithinPowerbankKeepAliveCooldown = millis() % KEEP_POWERBANK_ALIVE_COOLDOWN;
+  int currentMillisWithinPowerbankKeepAliveCooldown = millis() % KEEP_POWERBANK_ALIVE_COOLDOWN;
   if (currentMillisWithinPowerbankKeepAliveCooldown < NOWISH) {
-    blinkLight(determineCorrectIndicatorLight(powerbankChargedCheckpoint));
+    bool isTimeLeftForPowerbank = timeCalculations.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
+    blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
   }
 }
 
-int determineCorrectIndicatorLight(unsigned long thePowerbankChargedCheckpoint) {
-  long timeLeftForPowerbank = (thePowerbankChargedCheckpoint + POWERBANK_LIFE) - millis();
-  if (timeLeftForPowerbank > 0) {
+int getPowerbankLight(bool isTimeLeftForPowerbank) {
+  if (isTimeLeftForPowerbank) {
     return KEEP_POWERBANK_ALIVE_LED;
   } else {
     return POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED;
@@ -153,11 +154,12 @@ int determineCorrectIndicatorLight(unsigned long thePowerbankChargedCheckpoint) 
 }
 
 void checkStopAlarmOrSetHolidaySwitchState() {
-  stopAlarmOrSetHolidaySwitchState = digitalRead(STOP_ALARM_OR_SET_HOLIDAY_SWITCH);
+  int stopAlarmOrSetHolidaySwitchState = digitalRead(STOP_ALARM_OR_SET_HOLIDAY_SWITCH);
   if (stopAlarmOrSetHolidaySwitchState == HIGH) {
     if (timeCalculations.isTimeToSoundAlarm(timeUntilWakeup, startingDay, isHoliday)) {
       keepSoundingAlarmClock = false;
-      blinkLight(determineCorrectIndicatorLight(powerbankChargedCheckpoint));
+      bool isTimeLeftForPowerbank = timeCalculations.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
+      blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
     } else {
       isHoliday = !isHoliday;
       if (isHoliday) {
@@ -172,16 +174,17 @@ void checkStopAlarmOrSetHolidaySwitchState() {
 }
 
 void checkPowerbankChargedSwitchState() {
-  powerbankChargedSwitchState = digitalRead(POWERBANK_CHARGED_SWITCH);
+  int powerbankChargedSwitchState = digitalRead(POWERBANK_CHARGED_SWITCH);
   if (powerbankChargedSwitchState == HIGH) {
-    powerbankChargedCheckpoint = millis();
+    powerbankChargedIteration = millis() / POWERBANK_LIFE;
+    powerbankChargedCheckpoint = millis() % POWERBANK_LIFE;
     blinkLight(TIME_IS_BEING_SET_OR_POWERBANK_CHARGED_LED);
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
   }
 }
 
 void listenToUpdateTimeSwitch() {
-  updateTimeSwitchState = digitalRead(UPDATE_TIME_SWITCH);
+  int updateTimeSwitchState = digitalRead(UPDATE_TIME_SWITCH);
   if (updateTimeSwitchState == HIGH) {
     softwareSerial.write("timeplease");
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
@@ -199,7 +202,7 @@ void listenToUpdateTimeSwitch() {
 }
 
 void listenToUpdateDaySwitch() {
-  updateDaySwitchState = digitalRead(UPDATE_DAY_SWITCH);
+  int updateDaySwitchState = digitalRead(UPDATE_DAY_SWITCH);
   if (updateDaySwitchState == HIGH) {
     softwareSerial.write("dayplease");
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
