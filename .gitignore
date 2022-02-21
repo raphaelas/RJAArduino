@@ -16,4 +16,18 @@ Metro M0 Base/
 MKRWAN/
 MKRWAN_v2/
 Scheduler/
+Adafruit_BusIO/
+Adafruit_Circuit_Playground/
+Adafruit_GFX_Library/
+Adafruit_GPS_Library/
+Adafruit_ILI9341/
+Adafruit_LED_Backpack_Library/
+Adafruit_STMPE610/
+Adafruit_SleepyDog_Library/
+Adafruit_TouchScreen/
+Adafruit_Zero_DMA_Library/
+Adafruit_Zero_FFT_Library/
+Adafruit_Zero_PDM_Library/
+RTClib/
+WaveHC/
 

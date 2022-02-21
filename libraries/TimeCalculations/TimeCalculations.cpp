@@ -6,6 +6,13 @@
 
 TimeCalculations::TimeCalculations() {}
 
+bool TimeCalculations::isTimeToSoundAlarm(long theTimeUntilWakeup, int theStartingDay) {
+  unsigned long currentMillisecondsWithinDay = millis() % ONE_DAY;
+  long oneMinuteAfterWakeup = theTimeUntilWakeup + ONE_MINUTE;
+  return currentMillisecondsWithinDay >= theTimeUntilWakeup && currentMillisecondsWithinDay < oneMinuteAfterWakeup
+         && !dayIsWeekendDay(theStartingDay);
+}
+
 bool TimeCalculations::dayIsWeekendDay(int theStartingDay) {
   int currentDayOfWeek = calculateDayOfWeek(theStartingDay);
   for (int weekendDay = 0; weekendDay < (COUNT_WEEKEND_DAYS); weekendDay++) {
@@ -14,13 +21,6 @@ bool TimeCalculations::dayIsWeekendDay(int theStartingDay) {
     }
   }
   return false;
-}
-
-bool TimeCalculations::isTimeToSoundAlarm(long theTimeUntilWakeup, int theStartingDay) {
-  unsigned long currentMillisecondsWithinDay = millis() % ONE_DAY;
-  long oneMinuteAfterWakeup = theTimeUntilWakeup + ONE_MINUTE;
-  return currentMillisecondsWithinDay >= theTimeUntilWakeup && currentMillisecondsWithinDay < oneMinuteAfterWakeup
-         && !dayIsWeekendDay(theStartingDay);
 }
 
 HoursMinutesDuration TimeCalculations::calculateTimeLeftUntilAlarm(long theTimeUntilWakeup) {

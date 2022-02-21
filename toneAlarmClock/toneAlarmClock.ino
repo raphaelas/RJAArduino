@@ -196,12 +196,13 @@ void listenToUpdateDaySwitch() {
       startingDay = serialDayIn;
       blinkLight(DAY_IS_BEING_SET_LED);
       keepSoundingAlarmClock = true;
-      HoursMinutesDuration hoursMinutesDuration = timeCalculations.calculateTimeLeftUntilAlarm(timeUntilWakeup);
-      hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
       boolean shouldWriteSofShavuahTov = timeCalculations.dayIsWeekendDay(startingDay);
       if (shouldWriteSofShavuahTov) {
         hebrewCharacterWriter.writeSofShavuahTov(lcd);
         hasWrittenSofShavuahTov = true;
+      } else {
+        HoursMinutesDuration hoursMinutesDuration = timeCalculations.calculateTimeLeftUntilAlarm(timeUntilWakeup);
+        hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
       }
     }
   }

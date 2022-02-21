@@ -6,23 +6,15 @@ String alarmTimeFileName = "alarmset.txt";
 String alarmDayFileName = "alarmday.txt";
 const int FILE_COUNT = 2;
 const String FILES_TO_REMOVE[] = {alarmTimeFileName, alarmDayFileName};
-File alarmTimeFile;
-File alarmDayFile;
-int MAX_FILE_SIZE = 12;
+const int MAX_FILE_SIZE = 12;
+const int SERIAL_MONITOR_STARTUP_DELAY = 3000;
 
 bool alreadySentTimeToSerial1 = true;
 bool alreadySentDayToSerial1 = true;
 bool timeSet = false;
 bool daySet = false;
-
 bool promptedForTime = false;
 bool promptedForDay = false;
-
-bool recentlySentSomething = false;
-byte nextByte;
-String requestFromOtherArduino;
-
-const int SERIAL_MONITOR_STARTUP_DELAY = 3000;
 
 void setup() {
   setUpSerialCommunicators();
@@ -32,8 +24,8 @@ void setup() {
       String fileName = FILES_TO_REMOVE[file];
       if (SD.exists(fileName)) {
         Serial.println(fileName + " exists.");
-        printTheFileBeforeDeletingIt(fileName);
-        removeTheFile(fileName);
+        printFileBeforeDeletingIt(fileName);
+        removeFile(fileName);
       } else {
         Serial.println(fileName + " does not exist.");
       }
@@ -55,7 +47,7 @@ void loop() {
   }
 }
 
-void printTheFileBeforeDeletingIt(String fileName) {
+void printFileBeforeDeletingIt(String fileName) {
   File dataFile = SD.open(fileName);
   if (dataFile) {
     while (dataFile.available()) {
@@ -68,7 +60,7 @@ void printTheFileBeforeDeletingIt(String fileName) {
   }
 }
 
-void removeTheFile(String fileName) {
+void removeFile(String fileName) {
   bool removalResult = SD.remove(fileName);
   Serial.println("Removal result: ");
   Serial.println(removalResult);    
@@ -85,9 +77,8 @@ void initializeSdCard() {
 }
 
 void setUpSerialCommunicators() {
-  // Remember to connect your serial communication to a common ground.
   Serial1.begin(38400);
-  Serial.begin(9600);
+//  Serial.begin(9600);
   delay(SERIAL_MONITOR_STARTUP_DELAY);
 }
 
@@ -98,7 +89,7 @@ void writeNewTimeToFile() {
     promptedForTime = true;
   }
   if (Serial.available()) {
-    alarmTimeFile = SD.open(alarmTimeFileName, FILE_WRITE);
+    File alarmTimeFile = SD.open(alarmTimeFileName, FILE_WRITE);
     if (alarmTimeFile && alarmTimeFile.size() < MAX_FILE_SIZE) {
       long newTime = Serial.parseInt();
       if (newTime > 0) {
@@ -119,7 +110,7 @@ void writeNewDayToFile() {
     promptedForDay = true;
   }
   if (Serial.available()) {
-    alarmDayFile = SD.open(alarmDayFileName, FILE_WRITE);
+    File alarmDayFile = SD.open(alarmDayFileName, FILE_WRITE);
     if (alarmDayFile && alarmDayFile.size() < MAX_FILE_SIZE) {
       int newDay = Serial.parseInt();
       if (newDay > 0) {
@@ -136,19 +127,18 @@ void writeNewDayToFile() {
 
 void sendTimeToOtherArduino() {
   if (SD.exists(alarmTimeFileName)) {
-    alarmTimeFile = SD.open(alarmTimeFileName);
+    File alarmTimeFile = SD.open(alarmTimeFileName);
     if (alarmTimeFile) {
-        while (alarmTimeFile.available()) {
-          nextByte = alarmTimeFile.read();
-          if (isDigit(nextByte)) {
-            Serial1.write(nextByte);
-            Serial.write(nextByte);
-            recentlySentSomething = true;
-          }
+      byte nextByte;
+      while (alarmTimeFile.available()) {
+        nextByte = alarmTimeFile.read();
+        if (isDigit(nextByte)) {
+          Serial1.write(nextByte);
+          Serial.write(nextByte);
         }
-        Serial.println();
-        alreadySentTimeToSerial1 = true;
-        delay(3000);
+      }
+      Serial.println();
+      alreadySentTimeToSerial1 = true;
     }
     alarmTimeFile.close();
   }
@@ -156,19 +146,18 @@ void sendTimeToOtherArduino() {
 
 void sendDayToOtherArduino() {
   if (SD.exists(alarmDayFileName)) {
-    alarmDayFile = SD.open(alarmDayFileName);
+    File alarmDayFile = SD.open(alarmDayFileName);
     if (alarmDayFile) {
-        while (alarmDayFile.available()) {
-          nextByte = alarmDayFile.read();
-          if (isDigit(nextByte)) {
-            Serial1.write(nextByte);
-            Serial.write(nextByte);
-            recentlySentSomething = true;
-          }
+      byte nextByte;
+      while (alarmDayFile.available()) {
+        nextByte = alarmDayFile.read();
+        if (isDigit(nextByte)) {
+          Serial1.write(nextByte);
+          Serial.write(nextByte);
         }
-        Serial.println();
-        alreadySentDayToSerial1 = true;
-        delay(3000);
+      }
+      Serial.println();
+      alreadySentDayToSerial1 = true;
     }
     alarmDayFile.close();
   }
@@ -176,7 +165,7 @@ void sendDayToOtherArduino() {
 
 void listenForTriggerFromOtherArduino() {
   if (Serial1.available()) {
-    requestFromOtherArduino = Serial1.readString();
+    String requestFromOtherArduino = Serial1.readString();
     Serial.println(requestFromOtherArduino);
     if (requestFromOtherArduino.equals("timeplease")) {
       alreadySentTimeToSerial1 = false;
