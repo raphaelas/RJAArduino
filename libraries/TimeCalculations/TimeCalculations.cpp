@@ -30,8 +30,8 @@ HoursMinutesDuration TimeCalculations::calculateTimeLeftUntilAlarm(long theTimeU
 }
 
 bool TimeCalculations::isTimeLeftForPowerbank(int thePowerbankChargedIteration, long thePowerbankChargedCheckpoint) {
-  return millis() / POWERBANK_LIFE < thePowerbankChargedIteration ||
-   (millis() / POWERBANK_LIFE == thePowerbankChargedIteration && millis() % POWERBANK_LIFE < thePowerbankChargedCheckpoint);
+  return (millis() / POWERBANK_LIFE) < thePowerbankChargedIteration + 1 ||
+   (millis() / POWERBANK_LIFE == (thePowerbankChargedIteration + 1) && millis() % POWERBANK_LIFE < thePowerbankChargedCheckpoint);
 }
 
 int TimeCalculations::getDayNumber() {
