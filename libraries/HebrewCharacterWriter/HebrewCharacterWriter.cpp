@@ -86,7 +86,7 @@ void HebrewCharacterWriter::writeSofShavuahTov(LiquidCrystal lcd) {
   lcd.write(getCharacter(BET, relevantCharacters));
 }
 
-void HebrewCharacterWriter::writeChagSameach(LiquidCrystal lcd) {
+void HebrewCharacterWriter::writeChagSameach(LiquidCrystal lcd, int dayNumber) {
   int relevantCharacters[RELEVANT_CHARACTERS_COUNT];
   lcd = createLcdSpecialCharactersForChagSameach(lcd, relevantCharacters);
   lcd.begin(16, 2);
@@ -101,6 +101,18 @@ void HebrewCharacterWriter::writeChagSameach(LiquidCrystal lcd) {
   lcd.write(getCharacter(MEM, relevantCharacters));
   lcd.setCursor(10, 0);
   lcd.write(getCharacter(CHAFSOFIT, relevantCharacters));
+  writeDayNumber(lcd, relevantCharacters, dayNumber);
+}
+
+void HebrewCharacterWriter::writeDayNumber(LiquidCrystal lcd, int relevantCharacters[], int dayNumber) {
+  lcd.setCursor(5, 1);
+  lcd.write(getCharacter(YUD, relevantCharacters));
+  lcd.setCursor(4, 1);
+  lcd.write(getCharacter(VAV, relevantCharacters));
+  lcd.setCursor(3, 1);
+  lcd.write(getCharacter(MEMSOFIT, relevantCharacters));
+  lcd.setCursor(0, 1);
+  lcd.print(dayNumber);
 }
 
 LcdScrollData HebrewCharacterWriter::scrollLcdMessage(LiquidCrystal lcd, LcdScrollData lcdScrollData) {
@@ -176,13 +188,16 @@ LiquidCrystal HebrewCharacterWriter::createLcdSpecialCharactersForSofShavuahTov(
 }
 
 LiquidCrystal HebrewCharacterWriter::createLcdSpecialCharactersForChagSameach(LiquidCrystal lcd, int relevantCharacters[]) {
-  int newCharacters[] = {CHET, GIMEL, SHIN, MEM, CHAFSOFIT, 0, 0, 0};
+  int newCharacters[] = {CHET, GIMEL, SHIN, MEM, CHAFSOFIT, YUD, VAV, MEMSOFIT};
   overwriteRelevantCharactersList(newCharacters, relevantCharacters);
   lcd.createChar(getCharacter(CHET, relevantCharacters), chet);
   lcd.createChar(getCharacter(GIMEL, relevantCharacters), gimel);
   lcd.createChar(getCharacter(SHIN, relevantCharacters), shin);
   lcd.createChar(getCharacter(MEM, relevantCharacters), mem);
   lcd.createChar(getCharacter(CHAFSOFIT, relevantCharacters), chafsofit);
+  lcd.createChar(getCharacter(YUD, relevantCharacters), yud);
+  lcd.createChar(getCharacter(VAV, relevantCharacters), vav);
+  lcd.createChar(getCharacter(MEMSOFIT, relevantCharacters), memsofit);
   return lcd;
 }
 

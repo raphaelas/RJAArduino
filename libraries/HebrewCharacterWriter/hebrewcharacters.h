@@ -17,6 +17,8 @@
 #define GIMEL       17
 #define MEM         18
 #define CHAFSOFIT   19
+#define YUD         20
+#define MEMSOFIT    21
 
 // Characters generated with help from the LCD Custom Character Generator
 // available at https://maxpromer.github.io/LCD-Character-Creator
@@ -225,6 +227,28 @@ byte chafsofit[] = {
   B00010,
   B01100,
   B01000,
+  B01000,
+  B00000,
+  B00000
+};
+
+byte yud[] = {
+  B00000,
+  B00100,
+  B00100,
+  B00100,
+  B00000,
+  B00000,
+  B00000,
+  B00000
+};
+
+byte memsofit[] = {
+  B00000,
+  B01111,
+  B01001,
+  B01101,
+  B01010,
   B01000,
   B00000,
   B00000

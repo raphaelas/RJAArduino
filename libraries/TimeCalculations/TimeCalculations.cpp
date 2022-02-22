@@ -13,16 +13,6 @@ bool TimeCalculations::isTimeToSoundAlarm(long theTimeUntilWakeup, int theStarti
          && !dayIsWeekendDay(theStartingDay) && !isHoliday;
 }
 
-bool TimeCalculations::dayIsWeekendDay(int theStartingDay) {
-  int currentDayOfWeek = calculateDayOfWeek(theStartingDay);
-  for (int weekendDay = 0; weekendDay < (COUNT_WEEKEND_DAYS); weekendDay++) {
-    if (WEEKEND_DAYS[weekendDay] == currentDayOfWeek) {
-      return true;
-    }
-  }
-  return false;
-}
-
 int TimeCalculations::calculateDayOfWeek(int theStartingDay) {
   int mathUsableStartingDay = theStartingDay - 1;
   int startingDayMinusOne = (mathUsableStartingDay + (millis() / ONE_DAY)) % DAYS_IN_WEEK;
@@ -40,5 +30,20 @@ HoursMinutesDuration TimeCalculations::calculateTimeLeftUntilAlarm(long theTimeU
 }
 
 bool TimeCalculations::isTimeLeftForPowerbank(int thePowerbankChargedIteration, long thePowerbankChargedCheckpoint) {
-  return millis() / POWERBANK_LIFE <= thePowerbankChargedIteration || millis() % POWERBANK_LIFE <= thePowerbankChargedCheckpoint;
+  return millis() / POWERBANK_LIFE < thePowerbankChargedIteration ||
+   (millis() / POWERBANK_LIFE == thePowerbankChargedIteration && millis() % POWERBANK_LIFE < thePowerbankChargedCheckpoint);
+}
+
+int TimeCalculations::getDayNumber() {
+  return ((millis() / ONE_DAY) % DAY_NUMBER_MAX_LENGTH) + 1;
+}
+
+bool TimeCalculations::dayIsWeekendDay(int theStartingDay) {
+  int currentDayOfWeek = calculateDayOfWeek(theStartingDay);
+  for (int weekendDay = 0; weekendDay < (COUNT_WEEKEND_DAYS); weekendDay++) {
+    if (WEEKEND_DAYS[weekendDay] == currentDayOfWeek) {
+      return true;
+    }
+  }
+  return false;
 }

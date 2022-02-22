@@ -163,7 +163,8 @@ void checkStopAlarmOrSetHolidaySwitchState() {
     } else {
       isHoliday = !isHoliday;
       if (isHoliday) {
-        hebrewCharacterWriter.writeChagSameach(lcd);
+        int dayNumber = timeCalculations.getDayNumber();
+        hebrewCharacterWriter.writeChagSameach(lcd, dayNumber);
       } else {
         HoursMinutesDuration hoursMinutesDuration = timeCalculations.calculateTimeLeftUntilAlarm(timeUntilWakeup);
         hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);

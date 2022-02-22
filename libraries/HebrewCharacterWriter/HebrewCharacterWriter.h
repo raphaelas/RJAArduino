@@ -13,7 +13,7 @@ public:
   void writeTimeLeftUntilAlarmToLcd(LiquidCrystal lcd, HoursMinutesDuration hoursMinutesDuration);
   void writeBokerTov(LiquidCrystal lcd);
   void writeSofShavuahTov(LiquidCrystal lcd);
-  void writeChagSameach(LiquidCrystal lcd);
+  void writeChagSameach(LiquidCrystal lcd, int dayNumber);
   LcdScrollData scrollLcdMessage(LiquidCrystal lcd, LcdScrollData lcdScrollData);
   LcdScrollData resetLcdMessagePosition(LiquidCrystal lcd, LcdScrollData lcdScrollData);
 private:
@@ -26,5 +26,6 @@ private:
   void writeHey(LiquidCrystal lcd, int startingCursor, int relevantCharacters[]);
   void writeShahot(LiquidCrystal lcd, int relevantCharacters[], int startingCursor, bool singular);
   void writeDakot(LiquidCrystal lcd, int relevantCharacters[], int startingCursor, bool singular);
+  void writeDayNumber(LiquidCrystal lcd, int relevantCharacters[], int dayNumber);
 };
 #endif

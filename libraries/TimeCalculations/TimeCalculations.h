@@ -12,6 +12,7 @@ public:
   bool isTimeToSoundAlarm(long theTimeUntilWakeup, int theStartingDay, bool isHoliday);
   HoursMinutesDuration calculateTimeLeftUntilAlarm(long theTimeUntilWakeup);
   bool isTimeLeftForPowerbank(int thePowerbankChargedIteration, long thePowerbankChargedCheckpoint);
+  int getDayNumber();
 private:
   int calculateDayOfWeek(int theStartingDay);
 
