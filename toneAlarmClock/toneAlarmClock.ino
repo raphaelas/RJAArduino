@@ -197,9 +197,7 @@ void listenToUpdateTimeSwitch() {
       HoursMinutesDuration hoursMinutesDuration = timeCalculations.calculateTimeLeftUntilAlarm(timeUntilWakeup);
       hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
     } else {
-      blinkLight(POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED);
-      SoftwareSerial softwareSerial(RX_PIN, TX_PIN);
-      softwareSerial.begin(38400);
+      handleSerialCommunicationFailed();
     }
   }
 }
@@ -223,11 +221,15 @@ void listenToUpdateDaySwitch() {
         hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
       }
     } else {
-      blinkLight(POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED);
-      SoftwareSerial softwareSerial(RX_PIN, TX_PIN);
-      softwareSerial.begin(38400);
+      handleSerialCommunicationFailed();
     }
   }
+}
+
+void handleSerialCommunicationFailed() {
+  blinkLight(POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED);
+  softwareSerial = SoftwareSerial(RX_PIN, TX_PIN);
+  softwareSerial.begin(38400);
 }
 
 void listenToSwitches() {
