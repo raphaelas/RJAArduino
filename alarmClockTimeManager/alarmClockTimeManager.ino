@@ -18,9 +18,9 @@ bool promptedForTime = false;
 bool promptedForDay = false;
 
 void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
   setUpSerialCommunicators();
   initializeSdCard();
-  pinMode(LED_BUILTIN, OUTPUT);
   if (Serial) {
     for (int file = 0; file < FILE_COUNT; file++) {
       String fileName = FILES_TO_REMOVE[file];
@@ -74,7 +74,12 @@ void removeFile(String fileName) {
 void initializeSdCard() {
   if (!SD.begin(CHIP_SELECT_PIN)) {
     Serial.println("Card failed, or not present");
-    while (1);
+    while (true) {
+      digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+      delay(1000);                       // wait for a second
+      digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+      delay(1000);   
+    }
   }
 }
 
@@ -121,6 +126,7 @@ void writeNewDayToFile() {
         daySet = true;
         Serial.println("Arduino MKR is now ready to set Arduino Uno time variables.");
         Serial.println("Remember to connect the serial communication pins and a common ground.");
+        Serial.println("Also, please plug in the MKR board before plugging in the Uno.");
       }
     }
     alarmDayFile.close();

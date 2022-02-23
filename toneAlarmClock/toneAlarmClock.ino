@@ -198,6 +198,8 @@ void listenToUpdateTimeSwitch() {
       hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
     } else {
       blinkLight(POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED);
+      SoftwareSerial softwareSerial(RX_PIN, TX_PIN);
+      softwareSerial.begin(38400);
     }
   }
 }
@@ -222,6 +224,8 @@ void listenToUpdateDaySwitch() {
       }
     } else {
       blinkLight(POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED);
+      SoftwareSerial softwareSerial(RX_PIN, TX_PIN);
+      softwareSerial.begin(38400);
     }
   }
 }
