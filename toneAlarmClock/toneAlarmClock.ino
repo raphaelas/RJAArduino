@@ -3,10 +3,10 @@
 #include "timeconstants.h"
 #include "musicalconstants.h"
 #include "pinmappingconstants.h"
+#include "tonealarmclockstructs.h"
 #include <TimeCalculations.h>
 #include <HebrewCharacterWriter.h>
 #include <SoftwareSerial.h>
-#include "tonealarmclockstructs.h"
 
 TimeCalculations timeCalculations(STARTER_WAKEUP_TIME, STARTER_STARTING_DAY);
 HebrewCharacterWriter hebrewCharacterWriter(LCD_RS_PIN, LCD_E_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
