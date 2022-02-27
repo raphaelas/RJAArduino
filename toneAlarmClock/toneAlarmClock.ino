@@ -7,12 +7,13 @@
 #include <SoftwareSerial.h>
 #include <LiquidCrystal.h>
 
-const int STOP_ALARM_OR_SET_HOLIDAY_SWITCH = A3;
-const int POWERBANK_CHARGED_SWITCH = A2;
-const int UPDATE_TIME_SWITCH = A1;
-const int UPDATE_DAY_SWITCH = A0;
+const int TIME_IS_BEING_SET_LED = 19; // == A5
+const int STOP_ALARM_OR_SET_HOLIDAY_SWITCH = 17; // == A3
+const int POWERBANK_CHARGED_SWITCH = 16; // == A2
+const int UPDATE_TIME_SWITCH = 15; // == A1
+const int UPDATE_DAY_SWITCH = 14; // == A0
 const int KEEP_POWERBANK_ALIVE_LED = 6;
-const int TIME_IS_BEING_SET_OR_POWERBANK_CHARGED_LED = 7;
+const int POWERBANK_CHARGED_LED = 7;
 const int PIEZO_PIN = 8;
 const int POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED = 9;
 const int RX_PIN = 10;
@@ -33,8 +34,9 @@ TimeCalculations timeCalculations;
 
 void setup() {
   pinMode(KEEP_POWERBANK_ALIVE_LED, OUTPUT);
-  pinMode(TIME_IS_BEING_SET_OR_POWERBANK_CHARGED_LED, OUTPUT);
+  pinMode(POWERBANK_CHARGED_LED, OUTPUT);
   pinMode(POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED, OUTPUT);
+  pinMode(TIME_IS_BEING_SET_LED, OUTPUT);
   pinMode(DAY_IS_BEING_SET_LED, OUTPUT);
   pinMode(STOP_ALARM_OR_SET_HOLIDAY_SWITCH, INPUT);
   pinMode(POWERBANK_CHARGED_SWITCH, INPUT);
@@ -79,6 +81,8 @@ void handleNotTimeToSoundAlarm() {
   if (!hasResetLcdMessagePosition) {
     lcdScrollData = hebrewCharacterWriter.resetLcdMessagePosition(lcd, lcdScrollData);
     hasResetLcdMessagePosition = true;
+    bool isTimeLeftForPowerbank = timeCalculations.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
+    blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
   }
   if (timeCalculations.dayIsWeekendDay(startingDay) && !hasWrittenSofShavuahTov) {
     hebrewCharacterWriter.writeSofShavuahTov(lcd);
@@ -170,7 +174,7 @@ void checkStopAlarmOrSetHolidaySwitchState() {
         hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
       }
     }
-    delay(DELAY_BETWEEN_SWITCH_LISTENS);
+    splitDelayToKeepPowerbankOn(DELAY_BETWEEN_SWITCH_LISTENS);
   }
 }
 
@@ -179,20 +183,22 @@ void checkPowerbankChargedSwitchState() {
   if (powerbankChargedSwitchState == HIGH) {
     powerbankChargedIteration = millis() / POWERBANK_LIFE;
     powerbankChargedCheckpoint = millis() % POWERBANK_LIFE;
-    blinkLight(TIME_IS_BEING_SET_OR_POWERBANK_CHARGED_LED);
-    delay(DELAY_BETWEEN_SWITCH_LISTENS);
+    blinkLight(POWERBANK_CHARGED_LED);
+    splitDelayToKeepPowerbankOn(DELAY_BETWEEN_SWITCH_LISTENS);
   }
 }
 
 void listenToUpdateTimeSwitch() {
   int updateTimeSwitchState = digitalRead(UPDATE_TIME_SWITCH);
   if (updateTimeSwitchState == HIGH) {
-    softwareSerial.write("timeplease");
-    delay(DELAY_BETWEEN_SWITCH_LISTENS);
+    bool isTimeLeftForPowerbank = timeCalculations.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
+    blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
+    softwareSerial.write(TIME_REQUEST);
+    splitDelayToKeepPowerbankOn(DELAY_BETWEEN_SWITCH_LISTENS);
     long serialTimeIn = softwareSerial.parseInt();
     if (serialTimeIn > 0) {
       timeUntilWakeup = (serialTimeIn + millis()) % ONE_DAY;
-      blinkLight(TIME_IS_BEING_SET_OR_POWERBANK_CHARGED_LED);
+      blinkLight(TIME_IS_BEING_SET_LED);
       keepSoundingAlarmClock = true;
       HoursMinutesDuration hoursMinutesDuration = timeCalculations.calculateTimeLeftUntilAlarm(timeUntilWakeup);
       hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(lcd, hoursMinutesDuration);
@@ -205,8 +211,10 @@ void listenToUpdateTimeSwitch() {
 void listenToUpdateDaySwitch() {
   int updateDaySwitchState = digitalRead(UPDATE_DAY_SWITCH);
   if (updateDaySwitchState == HIGH) {
-    softwareSerial.write("dayplease");
-    delay(DELAY_BETWEEN_SWITCH_LISTENS);
+    bool isTimeLeftForPowerbank = timeCalculations.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
+    blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
+    softwareSerial.write(DAY_REQUEST);
+    splitDelayToKeepPowerbankOn(DELAY_BETWEEN_SWITCH_LISTENS);
     int serialDayIn = softwareSerial.parseInt();
     if (serialDayIn > 0) {
       startingDay = serialDayIn;
@@ -230,6 +238,15 @@ void handleSerialCommunicationFailed() {
   blinkLight(POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED);
   softwareSerial = SoftwareSerial(RX_PIN, TX_PIN);
   softwareSerial.begin(38400);
+  splitDelayToKeepPowerbankOn(ONE_SECOND * 3);
+}
+
+void splitDelayToKeepPowerbankOn(int delayAmount) {
+  int delayIterations = delayAmount / BRIEF_MOMENT;
+  for (int i = 0; i < delayIterations; i++) {
+    keepPowerbankOn();
+    delay(BRIEF_MOMENT);
+  }
 }
 
 void listenToSwitches() {
@@ -240,8 +257,9 @@ void listenToSwitches() {
 }
 
 void splitDelayToCheckForSwitchPress(int delayAmount) {
-  for (int i = 0; i < DELAY_DIVISOR; i++) {
-    delay(delayAmount / DELAY_DIVISOR);
+  int delayIterations = delayAmount / BRIEF_MOMENT;
+  for (int i = 0; i < delayIterations; i++) {
     listenToSwitches();
+    delay(BRIEF_MOMENT);
   }
 }

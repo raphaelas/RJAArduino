@@ -1,47 +1,78 @@
 #include <SPI.h>
 #include <SD.h>
+#include "alarmClockTimeManagerGlobalVariables.h"
+#include "sdcardconstants.h"
+#include "alarmclocktimemanagertimeconstants.h"
 
-const int CHIP_SELECT_PIN = 4;
-String alarmTimeFileName = "alarmset.txt";
-String alarmDayFileName = "alarmday.txt";
-const int FILE_COUNT = 2;
-const String FILES_TO_REMOVE[] = {alarmTimeFileName, alarmDayFileName};
-const int MAX_FILE_SIZE = 12;
-const int SERIAL_MONITOR_STARTUP_DELAY = 3000;
-const int BUILTIN_LED_ON_TIME = 10;
-
-bool alreadySentTimeToSerial1 = true;
-bool alreadySentDayToSerial1 = true;
-bool timeSet = false;
-bool daySet = false;
-bool promptedForTime = false;
-bool promptedForDay = false;
+const int TIME_INCREASE_SWITCH = 7;
+const int TIME_DECREASE_SWITCH = 9;
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(TIME_INCREASE_SWITCH, INPUT);
+  pinMode(TIME_DECREASE_SWITCH, INPUT);
   setUpSerialCommunicators();
-  initializeSdCard();
-  if (Serial) {
-    for (int file = 0; file < FILE_COUNT; file++) {
-      String fileName = FILES_TO_REMOVE[file];
-      if (SD.exists(fileName)) {
-        Serial.println(fileName + " exists.");
-        printFileBeforeDeletingIt(fileName);
-        removeFile(fileName);
-      } else {
-        Serial.println(fileName + " does not exist.");
+}
+
+void checkTimeIncreaseSwitchState() {
+  int timeIncreaseSwitchState = digitalRead(TIME_INCREASE_SWITCH);
+  if (timeIncreaseSwitchState == HIGH) {
+    File timeFile = SD.open(alarmTimeFileName);
+    long oldTime;
+    while (timeFile.available()) {
+      long parsedNumberBuffer = timeFile.parseInt();
+      if (parsedNumberBuffer > 0) {
+        oldTime = parsedNumberBuffer;
       }
     }
+    timeFile.close();
+    removeFile(alarmTimeFileName);
+    long newTime = oldTime + (ONE_MINUTE * 10);
+    File alarmTimeFile = SD.open(alarmTimeFileName, FILE_WRITE);
+    if (alarmTimeFile) {
+      alarmTimeFile.println(newTime);
+    }
+    alarmTimeFile.close();
+    blinkOnboardLed();
+  }
+}
+
+void checkTimeDecreaseSwitchState() {
+  int timeDecreaseSwitchState = digitalRead(TIME_DECREASE_SWITCH);
+  if (timeDecreaseSwitchState == HIGH) {
+    File timeFile = SD.open(alarmTimeFileName);
+    long oldTime;
+    while (timeFile.available()) {
+      long parsedNumberBuffer = timeFile.parseInt();
+      if (parsedNumberBuffer > 0) {
+        oldTime = parsedNumberBuffer;
+      }
+    }
+    timeFile.close();
+    removeFile(alarmTimeFileName);
+    long newTime = oldTime - (ONE_MINUTE * 10);
+    File alarmTimeFile = SD.open(alarmTimeFileName, FILE_WRITE);
+    if (alarmTimeFile) {
+      alarmTimeFile.println(newTime);
+    }
+    alarmTimeFile.close();
+    blinkOnboardLed();
   }
 }
 
 void loop() {
+  if (!alreadyInitializedSdCard) {
+    initializeSdCard();
+    alreadyInitializedSdCard = true;
+  }
   if (Serial && !timeSet) {
     writeNewTimeToFile();
   } else if (Serial && !daySet) {
     writeNewDayToFile();
   }
   listenForTriggerFromOtherArduino();
+  checkTimeIncreaseSwitchState();
+  checkTimeDecreaseSwitchState();
   if (!alreadySentTimeToSerial1) {
     sendTimeToOtherArduino();
   } else if (!alreadySentDayToSerial1) {
@@ -73,12 +104,21 @@ void removeFile(String fileName) {
 
 void initializeSdCard() {
   if (!SD.begin(CHIP_SELECT_PIN)) {
-    Serial.println("Card failed, or not present");
-    while (true) {
-      digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
-      delay(1000);                       // wait for a second
-      digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
-      delay(1000);   
+    Serial.println("SD Card failed or not present");
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(ONE_SECOND);
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(ONE_SECOND);   
+  } else if (Serial) {
+    for (int file = 0; file < FILE_COUNT; file++) {
+      String fileName = FILES_TO_REMOVE[file];
+      if (SD.exists(fileName)) {
+        Serial.println(fileName + " exists.");
+        printFileBeforeDeletingIt(fileName);
+        removeFile(fileName);
+      } else {
+        Serial.println(fileName + " does not exist.");
+      }
     }
   }
 }
@@ -91,13 +131,13 @@ void setUpSerialCommunicators() {
 
 void writeNewTimeToFile() {
   if (!promptedForTime && !SD.exists(alarmTimeFileName)) {
-    Serial.println("python /home/raphaelastrow/Arduino/timeuntilalarm.py");
+    Serial.println("python /home/$USER/Arduino/timeuntilalarm.py");
     Serial.println("Enter a time:");
     promptedForTime = true;
   }
   if (Serial.available()) {
     File alarmTimeFile = SD.open(alarmTimeFileName, FILE_WRITE);
-    if (alarmTimeFile && alarmTimeFile.size() < MAX_FILE_SIZE) {
+    if (alarmTimeFile) {
       long newTime = Serial.parseInt();
       if (newTime > 0) {
         alarmTimeFile.println(newTime);
@@ -118,7 +158,7 @@ void writeNewDayToFile() {
   }
   if (Serial.available()) {
     File alarmDayFile = SD.open(alarmDayFileName, FILE_WRITE);
-    if (alarmDayFile && alarmDayFile.size() < MAX_FILE_SIZE) {
+    if (alarmDayFile) {
       int newDay = Serial.parseInt();
       if (newDay > 0) {
         alarmDayFile.println(newDay);
@@ -126,7 +166,6 @@ void writeNewDayToFile() {
         daySet = true;
         Serial.println("Arduino MKR is now ready to set Arduino Uno time variables.");
         Serial.println("Remember to connect the serial communication pins and a common ground.");
-        Serial.println("Also, please plug in the MKR board before plugging in the Uno.");
       }
     }
     alarmDayFile.close();
@@ -174,9 +213,7 @@ void sendDayToOtherArduino() {
 void listenForTriggerFromOtherArduino() {
   if (Serial1.available()) {
     String requestFromOtherArduino = Serial1.readString();
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(BUILTIN_LED_ON_TIME);
-    digitalWrite(LED_BUILTIN, LOW);
+    blinkOnboardLed();
     Serial.println(requestFromOtherArduino);
     if (requestFromOtherArduino.equals("timeplease")) {
       alreadySentTimeToSerial1 = false;
@@ -184,4 +221,10 @@ void listenForTriggerFromOtherArduino() {
       alreadySentDayToSerial1 = false;
     }
   }
+}
+
+void blinkOnboardLed() {
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(BUILTIN_LED_ON_TIME);
+  digitalWrite(LED_BUILTIN, LOW);
 }
