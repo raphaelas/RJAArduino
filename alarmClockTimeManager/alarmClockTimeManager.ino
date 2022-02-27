@@ -189,7 +189,10 @@ void checkTimeIncreaseSwitchState() {
     long oldTime = readOldTime();
     removeFile(ALARM_TIME_FILE_NAME);
     long newTime = oldTime + (ONE_MINUTE * 10);
-    changeTime(newTime);
+    changeTime(newTime % ONE_DAY);
+    if (newTime >= ONE_DAY) {
+      changeDay(1);
+    }
     blinkOnboardLed();
   }
 }
@@ -200,9 +203,28 @@ void checkTimeDecreaseSwitchState() {
     long oldTime = readOldTime();
     removeFile(ALARM_TIME_FILE_NAME);
     long newTime = oldTime - (ONE_MINUTE * 10);
-    changeTime(newTime);
+    changeTime(newTime % ONE_DAY);
+    if (newTime < 0) {
+      changeDay(-1);
+    }
     blinkOnboardLed();
   }
+}
+
+void changeDay(int dayDelta) {
+  int oldDay = readOldDay();
+  removeFile(ALARM_DAY_FILE_NAME);
+  int newDay = oldDay + dayDelta;
+  int newDayWrappedAround = ((newDay - 1) % DAYS_IN_WEEK) + 1;
+  alterDay(newDayWrappedAround);
+}
+
+void alterDay(int newDay) {
+  File alarmDayFile = SD.open(ALARM_DAY_FILE_NAME, FILE_WRITE);
+  if (alarmDayFile) {
+    alarmDayFile.println(newDay);
+  }
+  alarmDayFile.close();
 }
 
 void changeTime(long newTime) {
@@ -224,4 +246,17 @@ long readOldTime() {
   }
   timeFile.close();
   return oldTime;
+}
+
+long readOldDay() {
+  int oldDay;
+  File dayFile = SD.open(ALARM_DAY_FILE_NAME);
+  while (dayFile.available()) {
+    int parsedNumberBuffer = dayFile.parseInt();
+    if (parsedNumberBuffer > 0) {
+      oldDay = parsedNumberBuffer;
+    }
+  }
+  dayFile.close();
+  return oldDay;
 }
