@@ -14,52 +14,6 @@ void setup() {
   setUpSerialCommunicators();
 }
 
-void checkTimeIncreaseSwitchState() {
-  int timeIncreaseSwitchState = digitalRead(TIME_INCREASE_SWITCH);
-  if (timeIncreaseSwitchState == HIGH) {
-    File timeFile = SD.open(alarmTimeFileName);
-    long oldTime;
-    while (timeFile.available()) {
-      long parsedNumberBuffer = timeFile.parseInt();
-      if (parsedNumberBuffer > 0) {
-        oldTime = parsedNumberBuffer;
-      }
-    }
-    timeFile.close();
-    removeFile(alarmTimeFileName);
-    long newTime = oldTime + (ONE_MINUTE * 10);
-    File alarmTimeFile = SD.open(alarmTimeFileName, FILE_WRITE);
-    if (alarmTimeFile) {
-      alarmTimeFile.println(newTime);
-    }
-    alarmTimeFile.close();
-    blinkOnboardLed();
-  }
-}
-
-void checkTimeDecreaseSwitchState() {
-  int timeDecreaseSwitchState = digitalRead(TIME_DECREASE_SWITCH);
-  if (timeDecreaseSwitchState == HIGH) {
-    File timeFile = SD.open(alarmTimeFileName);
-    long oldTime;
-    while (timeFile.available()) {
-      long parsedNumberBuffer = timeFile.parseInt();
-      if (parsedNumberBuffer > 0) {
-        oldTime = parsedNumberBuffer;
-      }
-    }
-    timeFile.close();
-    removeFile(alarmTimeFileName);
-    long newTime = oldTime - (ONE_MINUTE * 10);
-    File alarmTimeFile = SD.open(alarmTimeFileName, FILE_WRITE);
-    if (alarmTimeFile) {
-      alarmTimeFile.println(newTime);
-    }
-    alarmTimeFile.close();
-    blinkOnboardLed();
-  }
-}
-
 void loop() {
   if (!alreadyInitializedSdCard) {
     initializeSdCard();
@@ -130,13 +84,13 @@ void setUpSerialCommunicators() {
 }
 
 void writeNewTimeToFile() {
-  if (!promptedForTime && !SD.exists(alarmTimeFileName)) {
+  if (!promptedForTime && !SD.exists(ALARM_TIME_FILE_NAME)) {
     Serial.println("python /home/$USER/Arduino/timeuntilalarm.py");
     Serial.println("Enter a time:");
     promptedForTime = true;
   }
   if (Serial.available()) {
-    File alarmTimeFile = SD.open(alarmTimeFileName, FILE_WRITE);
+    File alarmTimeFile = SD.open(ALARM_TIME_FILE_NAME, FILE_WRITE);
     if (alarmTimeFile) {
       long newTime = Serial.parseInt();
       if (newTime > 0) {
@@ -150,14 +104,14 @@ void writeNewTimeToFile() {
 }
 
 void writeNewDayToFile() {
-  if (!promptedForDay && !SD.exists(alarmDayFileName)) {
+  if (!promptedForDay && !SD.exists(ALARM_DAY_FILE_NAME)) {
     Serial.println("Enter a day of week number from toneAlarmClock/weekdays.h. This");
     Serial.println("should be i.e. the day of the the next 8:00 AM occurrence.");
     Serial.println("timeuntilalarm.py prints out the correct day to enter.");
     promptedForDay = true;
   }
   if (Serial.available()) {
-    File alarmDayFile = SD.open(alarmDayFileName, FILE_WRITE);
+    File alarmDayFile = SD.open(ALARM_DAY_FILE_NAME, FILE_WRITE);
     if (alarmDayFile) {
       int newDay = Serial.parseInt();
       if (newDay > 0) {
@@ -173,8 +127,8 @@ void writeNewDayToFile() {
 }
 
 void sendTimeToOtherArduino() {
-  if (SD.exists(alarmTimeFileName)) {
-    File alarmTimeFile = SD.open(alarmTimeFileName);
+  if (SD.exists(ALARM_TIME_FILE_NAME)) {
+    File alarmTimeFile = SD.open(ALARM_TIME_FILE_NAME);
     if (alarmTimeFile) {
       byte nextByte;
       while (alarmTimeFile.available()) {
@@ -192,8 +146,8 @@ void sendTimeToOtherArduino() {
 }
 
 void sendDayToOtherArduino() {
-  if (SD.exists(alarmDayFileName)) {
-    File alarmDayFile = SD.open(alarmDayFileName);
+  if (SD.exists(ALARM_DAY_FILE_NAME)) {
+    File alarmDayFile = SD.open(ALARM_DAY_FILE_NAME);
     if (alarmDayFile) {
       byte nextByte;
       while (alarmDayFile.available()) {
@@ -227,4 +181,47 @@ void blinkOnboardLed() {
   digitalWrite(LED_BUILTIN, HIGH);
   delay(BUILTIN_LED_ON_TIME);
   digitalWrite(LED_BUILTIN, LOW);
+}
+
+void checkTimeIncreaseSwitchState() {
+  int timeIncreaseSwitchState = digitalRead(TIME_INCREASE_SWITCH);
+  if (timeIncreaseSwitchState == HIGH) {
+    long oldTime = readOldTime();
+    removeFile(ALARM_TIME_FILE_NAME);
+    long newTime = oldTime + (ONE_MINUTE * 10);
+    changeTime(newTime);
+    blinkOnboardLed();
+  }
+}
+
+void checkTimeDecreaseSwitchState() {
+  int timeDecreaseSwitchState = digitalRead(TIME_DECREASE_SWITCH);
+  if (timeDecreaseSwitchState == HIGH) {
+    long oldTime = readOldTime();
+    removeFile(ALARM_TIME_FILE_NAME);
+    long newTime = oldTime - (ONE_MINUTE * 10);
+    changeTime(newTime);
+    blinkOnboardLed();
+  }
+}
+
+void changeTime(long newTime) {
+  File alarmTimeFile = SD.open(ALARM_TIME_FILE_NAME, FILE_WRITE);
+  if (alarmTimeFile) {
+    alarmTimeFile.println(newTime);
+  }
+  alarmTimeFile.close();
+}
+
+long readOldTime() {
+  long oldTime;
+  File timeFile = SD.open(ALARM_TIME_FILE_NAME);
+  while (timeFile.available()) {
+    long parsedNumberBuffer = timeFile.parseInt();
+    if (parsedNumberBuffer > 0) {
+      oldTime = parsedNumberBuffer;
+    }
+  }
+  timeFile.close();
+  return oldTime;
 }
