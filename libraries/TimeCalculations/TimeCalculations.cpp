@@ -10,7 +10,7 @@ TimeCalculations::TimeCalculations(long theTimeUntilWakeup, int theStartingDay) 
 }
 
 bool TimeCalculations::isTimeToSoundAlarm(bool isHoliday) {
-  unsigned long currentMillisecondsWithinDay = millis() % ONE_DAY;
+  long currentMillisecondsWithinDay = millis() % ONE_DAY;
   long oneMinuteAfterWakeup = timeUntilWakeup + ONE_MINUTE;
   return currentMillisecondsWithinDay >= timeUntilWakeup && currentMillisecondsWithinDay < oneMinuteAfterWakeup
          && !dayIsWeekendDay() && !isHoliday;

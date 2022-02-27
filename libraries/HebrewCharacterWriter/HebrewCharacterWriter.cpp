@@ -8,7 +8,7 @@ const int RELEVANT_CHARACTERS_COUNT = 8;
 
 HebrewCharacterWriter::HebrewCharacterWriter(int lcd_rs_pin, int lcd_e_pin, int lcd_d4_pin,
 int lcd_d5_pin, int lcd_d6_pin, int lcd_d7_pin) {
-  lcd = &LiquidCrystal(lcd_rs_pin, lcd_e_pin, lcd_d4_pin, lcd_d5_pin, lcd_d6_pin, lcd_d7_pin);
+  lcd = new LiquidCrystal(lcd_rs_pin, lcd_e_pin, lcd_d4_pin, lcd_d5_pin, lcd_d6_pin, lcd_d7_pin);
 }
 
 void HebrewCharacterWriter::writeTimeLeftUntilAlarmToLcd(HoursMinutesDuration hoursMinutesDuration) {

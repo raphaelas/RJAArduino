@@ -7,8 +7,8 @@
 #include <HebrewCharacterWriter.h>
 #include <SoftwareSerial.h>
 
-TimeCalculations timeCalculations = TimeCalculations(STARTER_WAKEUP_TIME, STARTER_STARTING_DAY);
-HebrewCharacterWriter hebrewCharacterWriter = HebrewCharacterWriter(LCD_RS_PIN, LCD_E_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
+TimeCalculations timeCalculations(STARTER_WAKEUP_TIME, STARTER_STARTING_DAY);
+HebrewCharacterWriter hebrewCharacterWriter(LCD_RS_PIN, LCD_E_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
 
 SoftwareSerial softwareSerial(RX_PIN, TX_PIN);
 
@@ -29,6 +29,7 @@ void setup() {
 void loop() {
   keepPowerbankOn();
   listenToSwitches();
+  Serial.println(timeCalculations.timeUntilWakeup);
   if (timeCalculations.isTimeToSoundAlarm(isHoliday) && keepSoundingAlarmClock) {
     handleTimeToSoundAlarm();
   } else if (timeCalculations.isTimeToSoundAlarm(isHoliday) && !keepSoundingAlarmClock) {
@@ -176,8 +177,8 @@ void listenToUpdateTimeSwitch() {
     splitDelayToKeepPowerbankOn(DELAY_BETWEEN_SWITCH_LISTENS);
     long serialTimeIn = softwareSerial.parseInt();
     if (serialTimeIn > 0) {
-      long timeUntilWakeup = (serialTimeIn + millis()) % ONE_DAY;
-      timeCalculations.setTime(timeUntilWakeup);
+      long theTimeUntilWakeup = (serialTimeIn + millis()) % ONE_DAY;
+      timeCalculations.setTime(theTimeUntilWakeup);
       blinkLight(TIME_IS_BEING_SET_LED);
       keepSoundingAlarmClock = true;
       bool shouldWriteSofShavuahTov = timeCalculations.dayIsWeekendDay();
@@ -204,8 +205,8 @@ void listenToUpdateDaySwitch() {
     splitDelayToKeepPowerbankOn(DELAY_BETWEEN_SWITCH_LISTENS);
     int serialDayIn = softwareSerial.parseInt();
     if (serialDayIn > 0) {
-      int startingDay = serialDayIn;
-      timeCalculations.setDay(startingDay);
+      int theStartingDay = serialDayIn;
+      timeCalculations.setDay(theStartingDay);
       blinkLight(DAY_IS_BEING_SET_LED);
       keepSoundingAlarmClock = true;
       bool shouldWriteSofShavuahTov = timeCalculations.dayIsWeekendDay();
