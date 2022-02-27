@@ -2,4 +2,10 @@ TimeCalculations              KEYWORD1
 dayIsWeekendDay               KEYWORD2
 isTimeToSoundAlarm            KEYWORD2
 calculateTimeLeftUntilAlarm   KEYWORD2
+isTimeLeftForPowerbank        KEYWORD2
+getDayNumber                  KEYWORD2
+setTime                       KEYWORD2
+setDay                        KEYWORD2
 calculateDayOfWeek            KEYWORD2
+timeUntilWakeup               KEYWORD2
+startingDay                   KEYWORD2

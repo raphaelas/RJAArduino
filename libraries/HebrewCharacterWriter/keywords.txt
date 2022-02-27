@@ -2,13 +2,17 @@ HebrewCharacterWriter                         KEYWORD1
 writeTimeLeftUntilAlarmToLcd                  KEYWORD2
 writeBokerTov                                 KEYWORD2
 writeSofShavuahTov                            KEYWORD2
+writeChagSameach                              KEYWORD2
 scrollLcdMessage                              KEYWORD2
 resetLcdMessagePosition                       KEYWORD2
 overwriteRelevantCharactersList               KEYWORD2
 getCharacter                                  KEYWORD2
 createLcdSpecialCharactersForBokerTov         KEYWORD2
 createLcdSpecialCharactersForSofShavuahTov    KEYWORD2
+createLcdSpecialCharactersForChagSameach      KEYWORD2
 createLcdSpecialCharactersForTimeUntilAlarm   KEYWORD2
 writeHey                                      KEYWORD2
 writeShahot                                   KEYWORD2
 writeDakot                                    KEYWORD2
+writeDayNumber                                KEYWORD2
+lcd                                           KEYWORD2

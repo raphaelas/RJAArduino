@@ -4,7 +4,10 @@
 #include "timeconstants.h"
 #include "tonealarmclockstructs.h"
 
-TimeCalculations::TimeCalculations(long timeUntilWakeup, int startingDay) {}
+TimeCalculations::TimeCalculations(long theTimeUntilWakeup, int theStartingDay) {
+  timeUntilWakeup = theTimeUntilWakeup;
+  startingDay = theStartingDay;
+}
 
 bool TimeCalculations::isTimeToSoundAlarm(bool isHoliday) {
   unsigned long currentMillisecondsWithinDay = millis() % ONE_DAY;
@@ -52,6 +55,7 @@ void TimeCalculations::setDay(int theStartingDay) {
 
 int TimeCalculations::calculateDayOfWeek() {
   int mathUsableStartingDay = startingDay - 1;
-  int startingDayMinusOne = (mathUsableStartingDay + (millis() / ONE_DAY)) % DAYS_IN_WEEK;
+  int incrementDayTimeUntilWakeupHasPassed = (millis() % ONE_DAY) > timeUntilWakeup ? 1 : 0;
+  int startingDayMinusOne = (mathUsableStartingDay + (millis() / ONE_DAY) + incrementDayTimeUntilWakeupHasPassed) % DAYS_IN_WEEK;
   return startingDayMinusOne + 1;
 }

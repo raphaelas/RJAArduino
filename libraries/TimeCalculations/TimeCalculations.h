@@ -7,7 +7,7 @@ struct HoursMinutesDuration;
 class TimeCalculations {
 
 public:
-  TimeCalculations(long timeUntilWakeup, int startingDay);
+  TimeCalculations(long theTimeUntilWakeup, int theStartingDay);
   bool dayIsWeekendDay();
   bool isTimeToSoundAlarm(bool isHoliday);
   HoursMinutesDuration calculateTimeLeftUntilAlarm();
