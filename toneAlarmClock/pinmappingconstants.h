@@ -1,4 +1,4 @@
-#define TIME_IS_BEING_SET_LED                                 19 // == A5
+#define TIME_IS_BEING_SET_LED                                 19 // == A5 == SCL
 #define STOP_ALARM_OR_SET_HOLIDAY_SWITCH                      17 // == A3
 #define POWERBANK_CHARGED_SWITCH                              16 // == A2
 #define UPDATE_TIME_SWITCH                                    15 // == A1

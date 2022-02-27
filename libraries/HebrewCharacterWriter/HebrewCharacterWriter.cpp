@@ -9,6 +9,7 @@ const int RELEVANT_CHARACTERS_COUNT = 8;
 HebrewCharacterWriter::HebrewCharacterWriter(int lcd_rs_pin, int lcd_e_pin, int lcd_d4_pin,
 int lcd_d5_pin, int lcd_d6_pin, int lcd_d7_pin) {
   lcd = new LiquidCrystal(lcd_rs_pin, lcd_e_pin, lcd_d4_pin, lcd_d5_pin, lcd_d6_pin, lcd_d7_pin);
+  lcdScrollData = new (LcdScrollData) {true, 0};
 }
 
 void HebrewCharacterWriter::writeTimeLeftUntilAlarmToLcd(HoursMinutesDuration hoursMinutesDuration) {
@@ -118,9 +119,9 @@ void HebrewCharacterWriter::writeDayNumber(int relevantCharacters[], int dayNumb
   lcd->print(dayNumber);
 }
 
-LcdScrollData HebrewCharacterWriter::scrollLcdMessage(LcdScrollData lcdScrollData) {
-  bool scrollLeft = lcdScrollData.scrollLeft;
-  int scrollPositionCounter = lcdScrollData.scrollPositionCounter;
+void HebrewCharacterWriter::scrollLcdMessage() {
+  bool scrollLeft = lcdScrollData->scrollLeft;
+  int scrollPositionCounter = lcdScrollData->scrollPositionCounter;
   if (scrollPositionCounter == MAX_SCROLL_AMOUNT) {
     scrollLeft = !scrollLeft;
     scrollPositionCounter = 0;
@@ -131,12 +132,13 @@ LcdScrollData HebrewCharacterWriter::scrollLcdMessage(LcdScrollData lcdScrollDat
     lcd->scrollDisplayRight();
   }
   scrollPositionCounter++;
-  return (LcdScrollData) {scrollLeft, scrollPositionCounter};
+  delete(lcdScrollData);
+  lcdScrollData = new (LcdScrollData) {scrollLeft, scrollPositionCounter};
 }
 
-LcdScrollData HebrewCharacterWriter::resetLcdMessagePosition(LcdScrollData lcdScrollData) {
-  bool scrollLeft = lcdScrollData.scrollLeft;
-  int scrollPositionCounter = lcdScrollData.scrollPositionCounter;
+void HebrewCharacterWriter::resetLcdMessagePosition() {
+  bool scrollLeft = lcdScrollData->scrollLeft;
+  int scrollPositionCounter = lcdScrollData->scrollPositionCounter;
   if (!scrollLeft) {
     scrollPositionCounter = MAX_SCROLL_AMOUNT - scrollPositionCounter;
   }
@@ -145,7 +147,8 @@ LcdScrollData HebrewCharacterWriter::resetLcdMessagePosition(LcdScrollData lcdSc
     scrollPositionCounter--;
   }
   scrollLeft = true;
-  return (LcdScrollData) {scrollLeft, scrollPositionCounter};
+  delete(lcdScrollData);
+  lcdScrollData = new (LcdScrollData) {scrollLeft, scrollPositionCounter};
 }
 
 void HebrewCharacterWriter::overwriteRelevantCharactersList(int newCharacters[], int relevantCharacters[]) {

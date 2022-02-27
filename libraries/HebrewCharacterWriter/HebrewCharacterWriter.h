@@ -3,6 +3,11 @@
 #include "Arduino.h"
 #include <LiquidCrystal.h>
 
+struct LcdScrollData {
+  bool scrollLeft;
+  int scrollPositionCounter;
+};
+
 struct LcdScrollData;
 struct HoursMinutesDuration;
 
@@ -15,8 +20,8 @@ class HebrewCharacterWriter {
     void writeBokerTov();
     void writeSofShavuahTov();
     void writeChagSameach(int dayNumber);
-    LcdScrollData scrollLcdMessage(LcdScrollData lcdScrollData);
-    LcdScrollData resetLcdMessagePosition(LcdScrollData lcdScrollData);
+    void scrollLcdMessage();
+    void resetLcdMessagePosition();
   private:
     void overwriteRelevantCharactersList(int newCharacters[], int relevantCharacters[]);
     int getCharacter(int characterToSearch, int relevantCharacters[]);
@@ -29,5 +34,6 @@ class HebrewCharacterWriter {
     void writeDakot(int relevantCharacters[], int startingCursor, bool singular);
     void writeDayNumber(int relevantCharacters[], int dayNumber);
     LiquidCrystal * lcd;
+    LcdScrollData * lcdScrollData;
 };
 #endif
