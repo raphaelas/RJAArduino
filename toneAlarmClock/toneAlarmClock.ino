@@ -211,6 +211,7 @@ void listenToUpdateTimeSwitch() {
     } else {
       handleSerialCommunicationFailed();
     }
+    blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
   }
 }
 
@@ -237,6 +238,7 @@ void listenToUpdateDaySwitch() {
     } else {
       handleSerialCommunicationFailed();
     }
+    blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
   }
 }
 
