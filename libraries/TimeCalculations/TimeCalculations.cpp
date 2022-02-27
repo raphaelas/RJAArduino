@@ -4,23 +4,27 @@
 #include "timeconstants.h"
 #include "tonealarmclockstructs.h"
 
-TimeCalculations::TimeCalculations() {}
+TimeCalculations::TimeCalculations(long timeUntilWakeup, int startingDay) {}
 
-bool TimeCalculations::isTimeToSoundAlarm(long theTimeUntilWakeup, int theStartingDay, bool isHoliday) {
+bool TimeCalculations::isTimeToSoundAlarm(bool isHoliday) {
   unsigned long currentMillisecondsWithinDay = millis() % ONE_DAY;
-  long oneMinuteAfterWakeup = theTimeUntilWakeup + ONE_MINUTE;
-  return currentMillisecondsWithinDay >= theTimeUntilWakeup && currentMillisecondsWithinDay < oneMinuteAfterWakeup
-         && !dayIsWeekendDay(theStartingDay) && !isHoliday;
+  long oneMinuteAfterWakeup = timeUntilWakeup + ONE_MINUTE;
+  return currentMillisecondsWithinDay >= timeUntilWakeup && currentMillisecondsWithinDay < oneMinuteAfterWakeup
+         && !dayIsWeekendDay() && !isHoliday;
 }
 
-int TimeCalculations::calculateDayOfWeek(int theStartingDay) {
-  int mathUsableStartingDay = theStartingDay - 1;
-  int startingDayMinusOne = (mathUsableStartingDay + (millis() / ONE_DAY)) % DAYS_IN_WEEK;
-  return startingDayMinusOne + 1;
+bool TimeCalculations::dayIsWeekendDay() {
+  int currentDayOfWeek = calculateDayOfWeek();
+  for (int weekendDay = 0; weekendDay < (COUNT_WEEKEND_DAYS); weekendDay++) {
+    if (WEEKEND_DAYS[weekendDay] == currentDayOfWeek) {
+      return true;
+    }
+  }
+  return false;
 }
 
-HoursMinutesDuration TimeCalculations::calculateTimeLeftUntilAlarm(long theTimeUntilWakeup) {
-  long millisecondsUntilWakeup = theTimeUntilWakeup - (millis() % ONE_DAY);
+HoursMinutesDuration TimeCalculations::calculateTimeLeftUntilAlarm() {
+  long millisecondsUntilWakeup = timeUntilWakeup - (millis() % ONE_DAY);
   if (millisecondsUntilWakeup < 0) {
     millisecondsUntilWakeup += ONE_DAY;
   }
@@ -29,21 +33,25 @@ HoursMinutesDuration TimeCalculations::calculateTimeLeftUntilAlarm(long theTimeU
   return (HoursMinutesDuration) {hoursLeftUntilAlarm, minutesLeftUntilAlarm};
 }
 
-bool TimeCalculations::isTimeLeftForPowerbank(int thePowerbankChargedIteration, long thePowerbankChargedCheckpoint) {
-  return (millis() / POWERBANK_LIFE) < thePowerbankChargedIteration + 1 ||
-   (millis() / POWERBANK_LIFE == (thePowerbankChargedIteration + 1) && millis() % POWERBANK_LIFE < thePowerbankChargedCheckpoint);
+bool TimeCalculations::isTimeLeftForPowerbank(int powerbankChargedIteration, long powerbankChargedCheckpoint) {
+  return (millis() / POWERBANK_LIFE) < powerbankChargedIteration + 1 ||
+   (millis() / POWERBANK_LIFE == (powerbankChargedIteration + 1) && millis() % POWERBANK_LIFE < powerbankChargedCheckpoint);
 }
 
 int TimeCalculations::getDayNumber() {
   return ((millis() / ONE_DAY) % DAY_NUMBER_MAX_LENGTH) + 1;
 }
 
-bool TimeCalculations::dayIsWeekendDay(int theStartingDay) {
-  int currentDayOfWeek = calculateDayOfWeek(theStartingDay);
-  for (int weekendDay = 0; weekendDay < (COUNT_WEEKEND_DAYS); weekendDay++) {
-    if (WEEKEND_DAYS[weekendDay] == currentDayOfWeek) {
-      return true;
-    }
-  }
-  return false;
+void TimeCalculations::setTime(long theTimeUntilWakeup) {
+  timeUntilWakeup = theTimeUntilWakeup;
+}
+
+void TimeCalculations::setDay(int theStartingDay) {
+  startingDay = theStartingDay;
+}
+
+int TimeCalculations::calculateDayOfWeek() {
+  int mathUsableStartingDay = startingDay - 1;
+  int startingDayMinusOne = (mathUsableStartingDay + (millis() / ONE_DAY)) % DAYS_IN_WEEK;
+  return startingDayMinusOne + 1;
 }

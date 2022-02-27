@@ -7,14 +7,18 @@ struct HoursMinutesDuration;
 class TimeCalculations {
 
 public:
-  TimeCalculations();
-  bool dayIsWeekendDay(int theStartingDay);
-  bool isTimeToSoundAlarm(long theTimeUntilWakeup, int theStartingDay, bool isHoliday);
-  HoursMinutesDuration calculateTimeLeftUntilAlarm(long theTimeUntilWakeup);
-  bool isTimeLeftForPowerbank(int thePowerbankChargedIteration, long thePowerbankChargedCheckpoint);
+  TimeCalculations(long timeUntilWakeup, int startingDay);
+  bool dayIsWeekendDay();
+  bool isTimeToSoundAlarm(bool isHoliday);
+  HoursMinutesDuration calculateTimeLeftUntilAlarm();
+  bool isTimeLeftForPowerbank(int powerbankChargedIteration, long powerbankChargedCheckpoint);
   int getDayNumber();
+  void setTime(long theTimeUntilWakeup);
+  void setDay(int theStartingDay);
 private:
-  int calculateDayOfWeek(int theStartingDay);
+  int calculateDayOfWeek();
+  long timeUntilWakeup;
+  int startingDay;
 
 };
 #endif

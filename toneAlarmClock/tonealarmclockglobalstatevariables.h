@@ -1,6 +1,3 @@
-long timeUntilWakeup;
-int startingDay;
-
 bool keepSoundingAlarmClock = true;
 bool hasWrittenBokerTov = false;
 bool hasWrittenSofShavuahTov = false;
