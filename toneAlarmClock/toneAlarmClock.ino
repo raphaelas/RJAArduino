@@ -6,6 +6,7 @@
 #include <TimeCalculations.h>
 #include <HebrewCharacterWriter.h>
 #include <SoftwareSerial.h>
+#include "tonealarmclockstructs.h"
 
 TimeCalculations timeCalculations(STARTER_WAKEUP_TIME, STARTER_STARTING_DAY);
 HebrewCharacterWriter hebrewCharacterWriter(LCD_RS_PIN, LCD_E_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
@@ -46,9 +47,9 @@ void handleTimeToSoundAlarm() {
     hasResetLcdMessagePosition = false;
   }
   soundAlarm(0, ALARM_NOTE_COUNT / 2);
-  lcdScrollData = hebrewCharacterWriter.scrollLcdMessage(lcdScrollData);
+  hebrewCharacterWriter.scrollLcdMessage();
   soundAlarm(ALARM_NOTE_COUNT / 2, ALARM_NOTE_COUNT);
-  lcdScrollData = hebrewCharacterWriter.scrollLcdMessage(lcdScrollData);
+  hebrewCharacterWriter.scrollLcdMessage();
   keepPowerbankOnWhileAlarmSounding();
   splitDelayToCheckForSwitchPress(DELAY_BETWEEN_REPEATS);
 }
@@ -58,7 +59,7 @@ void handleNotTimeToSoundAlarm() {
   countdownBlinkLightWhileAlarmSounding = 0;
   hasWrittenBokerTov = false;
   if (!hasResetLcdMessagePosition) {
-    lcdScrollData = hebrewCharacterWriter.resetLcdMessagePosition(lcdScrollData);
+    hebrewCharacterWriter.resetLcdMessagePosition();
     hasResetLcdMessagePosition = true;
     bool isTimeLeftForPowerbank = timeCalculations.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
     blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
@@ -78,7 +79,7 @@ void handleNotTimeToSoundAlarm() {
 
 void handleInBetweenStopButtonPressAndAlarmTimeEnding() {
   if (!hasResetLcdMessagePosition) {
-    lcdScrollData = hebrewCharacterWriter.resetLcdMessagePosition(lcdScrollData);
+    hebrewCharacterWriter.resetLcdMessagePosition();
     hasResetLcdMessagePosition = true;
   }
 }
