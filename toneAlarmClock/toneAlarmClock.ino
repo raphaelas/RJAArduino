@@ -7,20 +7,18 @@
 #include <TimeCalculator.h>
 #include <HebrewCharacterWriter.h>
 #include <SwitchManager.h>
+#include <LightManager.h>
 #include <SoftwareSerial.h>
 
 TimeCalculator timeCalculator(STARTER_WAKEUP_TIME, STARTER_STARTING_DAY);
 HebrewCharacterWriter hebrewCharacterWriter(LCD_RS_PIN, LCD_E_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
 SwitchManager switchManager(STOP_ALARM_OR_SET_HOLIDAY_SWITCH, POWERBANK_CHARGED_SWITCH, UPDATE_TIME_SWITCH, UPDATE_DAY_SWITCH);
+LightManager lightManager(KEEP_POWERBANK_ALIVE_LED, POWERBANK_CHARGED_LED, POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED,
+                          TIME_IS_BEING_SET_LED, DAY_IS_BEING_SET_LED);
 
 SoftwareSerial softwareSerial(RX_PIN, TX_PIN);
 
 void setup() {
-  pinMode(KEEP_POWERBANK_ALIVE_LED, OUTPUT);
-  pinMode(POWERBANK_CHARGED_LED, OUTPUT);
-  pinMode(POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED, OUTPUT);
-  pinMode(TIME_IS_BEING_SET_LED, OUTPUT);
-  pinMode(DAY_IS_BEING_SET_LED, OUTPUT);
   softwareSerial.begin(38400);
   playStartUpNotes();
 }
@@ -28,7 +26,6 @@ void setup() {
 void loop() {
   keepPowerbankOn();
   listenToSwitches();
-  Serial.println(timeCalculator.timeUntilWakeup);
   if (timeCalculator.isTimeToSoundAlarm(isHoliday) && keepSoundingAlarmClock) {
     handleTimeToSoundAlarm();
   } else if (timeCalculator.isTimeToSoundAlarm(isHoliday) && !keepSoundingAlarmClock) {
@@ -60,7 +57,7 @@ void handleNotTimeToSoundAlarm() {
     hebrewCharacterWriter.resetLcdMessagePosition();
     hasResetLcdMessagePosition = true;
     bool isTimeLeftForPowerbank = timeCalculator.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
-    blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
+    lightManager.blinkLight(lightManager.getPowerbankLight(isTimeLeftForPowerbank), BRIEF_MOMENT);
   }
   if (timeCalculator.dayIsWeekendDay() && !hasWrittenSofShavuahTov) {
     hebrewCharacterWriter.writeSofShavuahTov();
@@ -104,16 +101,10 @@ void playStartUpNotes() {
   }
 }
 
-void blinkLight(int lightNumber) {
-  digitalWrite(lightNumber, HIGH);
-  delay(BRIEF_MOMENT);
-  digitalWrite(lightNumber, LOW);
-}
-
 void keepPowerbankOnWhileAlarmSounding() {
   if (countdownBlinkLightWhileAlarmSounding == 0) {
     bool isTimeLeftForPowerbank = timeCalculator.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
-    blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
+    lightManager.blinkLight(lightManager.getPowerbankLight(isTimeLeftForPowerbank), BRIEF_MOMENT);
     countdownBlinkLightWhileAlarmSounding = ALARM_SOUNDING_POWERBANK_MAX_COUNTDOWN;
   } else {
     countdownBlinkLightWhileAlarmSounding--;
@@ -124,15 +115,7 @@ void keepPowerbankOn() {
   int currentMillisWithinPowerbankKeepAliveCooldown = millis() % KEEP_POWERBANK_ALIVE_COOLDOWN;
   if (currentMillisWithinPowerbankKeepAliveCooldown < NOWISH) {
     bool isTimeLeftForPowerbank = timeCalculator.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
-    blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
-  }
-}
-
-int getPowerbankLight(bool isTimeLeftForPowerbank) {
-  if (isTimeLeftForPowerbank) {
-    return KEEP_POWERBANK_ALIVE_LED;
-  } else {
-    return POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED;
+    lightManager.blinkLight(lightManager.getPowerbankLight(isTimeLeftForPowerbank), BRIEF_MOMENT);
   }
 }
 
@@ -141,7 +124,7 @@ void checkStopAlarmOrSetHolidaySwitchState() {
     if (timeCalculator.isTimeToSoundAlarm(isHoliday)) {
       keepSoundingAlarmClock = false;
       bool isTimeLeftForPowerbank = timeCalculator.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
-      blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
+      lightManager.blinkLight(lightManager.getPowerbankLight(isTimeLeftForPowerbank), BRIEF_MOMENT);
     } else {
       isHoliday = !isHoliday;
       if (isHoliday) {
@@ -160,7 +143,7 @@ void checkPowerbankChargedSwitchState() {
   if (switchManager.isPowerbankChargedSwitchPressed()) {
     powerbankChargedIteration = millis() / POWERBANK_LIFE;
     powerbankChargedCheckpoint = millis() % POWERBANK_LIFE;
-    blinkLight(POWERBANK_CHARGED_LED);
+    lightManager.blinkLight(POWERBANK_CHARGED_LED, BRIEF_MOMENT);
     splitDelayToKeepPowerbankOn(DELAY_BETWEEN_SWITCH_LISTENS);
   }
 }
@@ -168,14 +151,14 @@ void checkPowerbankChargedSwitchState() {
 void listenToUpdateTimeSwitch() {
   if (switchManager.isUpdateTimeSwitchPressed()) {
     bool isTimeLeftForPowerbank = timeCalculator.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
-    blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
+    lightManager.blinkLight(lightManager.getPowerbankLight(isTimeLeftForPowerbank), BRIEF_MOMENT);
     softwareSerial.write(TIME_REQUEST);
     splitDelayToKeepPowerbankOn(DELAY_BETWEEN_SWITCH_LISTENS);
     long serialTimeIn = softwareSerial.parseInt();
     if (serialTimeIn > 0) {
       long theTimeUntilWakeup = (serialTimeIn + millis()) % ONE_DAY;
       timeCalculator.setTime(theTimeUntilWakeup);
-      blinkLight(TIME_IS_BEING_SET_LED);
+      lightManager.blinkLight(TIME_IS_BEING_SET_LED, BRIEF_MOMENT);
       keepSoundingAlarmClock = true;
       bool shouldWriteSofShavuahTov = timeCalculator.dayIsWeekendDay();
       if (shouldWriteSofShavuahTov) {
@@ -188,21 +171,21 @@ void listenToUpdateTimeSwitch() {
     } else {
       handleSerialCommunicationFailed();
     }
-    blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
+    lightManager.blinkLight(lightManager.getPowerbankLight(isTimeLeftForPowerbank), BRIEF_MOMENT);
   }
 }
 
 void listenToUpdateDaySwitch() {
   if (switchManager.isUpdateDaySwitchPressed()) {
     bool isTimeLeftForPowerbank = timeCalculator.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
-    blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
+    lightManager.blinkLight(lightManager.getPowerbankLight(isTimeLeftForPowerbank), BRIEF_MOMENT);
     softwareSerial.write(DAY_REQUEST);
     splitDelayToKeepPowerbankOn(DELAY_BETWEEN_SWITCH_LISTENS);
     int serialDayIn = softwareSerial.parseInt();
     if (serialDayIn > 0) {
       int theStartingDay = serialDayIn;
       timeCalculator.setDay(theStartingDay);
-      blinkLight(DAY_IS_BEING_SET_LED);
+      lightManager.blinkLight(DAY_IS_BEING_SET_LED, BRIEF_MOMENT);
       keepSoundingAlarmClock = true;
       bool shouldWriteSofShavuahTov = timeCalculator.dayIsWeekendDay();
       if (shouldWriteSofShavuahTov) {
@@ -215,12 +198,12 @@ void listenToUpdateDaySwitch() {
     } else {
       handleSerialCommunicationFailed();
     }
-    blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
+    lightManager.blinkLight(lightManager.getPowerbankLight(isTimeLeftForPowerbank), BRIEF_MOMENT);
   }
 }
 
 void handleSerialCommunicationFailed() {
-  blinkLight(POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED);
+  lightManager.blinkLight(POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED, BRIEF_MOMENT);
   softwareSerial = SoftwareSerial(RX_PIN, TX_PIN);
   softwareSerial.begin(38400);
   splitDelayToKeepPowerbankOn(ONE_SECOND * 3);

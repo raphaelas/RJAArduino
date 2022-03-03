@@ -1,0 +1,8 @@
+LightManager                                   KEYWORD1
+getPowerbankLight                              KEYWORD2
+blinkLight                                     KEYWORD2
+keepPowerbankAliveLed                          KEYWORD2
+powerbankChargedLed                            KEYWORD2
+powerbankIsLowOrSerialCommunicationFailedLed   KEYWORD2
+timeIsBeingSetLed                              KEYWORD2
+dayIsBeingSetLed                               KEYWORD2
