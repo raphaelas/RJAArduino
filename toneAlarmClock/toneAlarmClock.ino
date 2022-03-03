@@ -120,7 +120,7 @@ void keepPowerbankOn() {
 }
 
 void checkStopAlarmOrSetHolidaySwitchState() {
-  if (switchManager.isStopAlarmOrSetHolidaySwitchPressed()) {
+  if (switchManager.isSwitchPressed(STOP_ALARM_OR_SET_HOLIDAY_SWITCH)) {
     if (timeCalculator.isTimeToSoundAlarm(isHoliday)) {
       keepSoundingAlarmClock = false;
       bool isTimeLeftForPowerbank = timeCalculator.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
@@ -140,7 +140,7 @@ void checkStopAlarmOrSetHolidaySwitchState() {
 }
 
 void checkPowerbankChargedSwitchState() {
-  if (switchManager.isPowerbankChargedSwitchPressed()) {
+  if (switchManager.isSwitchPressed(POWERBANK_CHARGED_SWITCH)) {
     powerbankChargedIteration = millis() / POWERBANK_LIFE;
     powerbankChargedCheckpoint = millis() % POWERBANK_LIFE;
     lightManager.blinkLight(POWERBANK_CHARGED_LED, BRIEF_MOMENT);
@@ -149,7 +149,7 @@ void checkPowerbankChargedSwitchState() {
 }
 
 void listenToUpdateTimeSwitch() {
-  if (switchManager.isUpdateTimeSwitchPressed()) {
+  if (switchManager.isSwitchPressed(UPDATE_TIME_SWITCH)) {
     bool isTimeLeftForPowerbank = timeCalculator.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
     lightManager.blinkLight(lightManager.getPowerbankLight(isTimeLeftForPowerbank), BRIEF_MOMENT);
     softwareSerial.write(TIME_REQUEST);
@@ -176,7 +176,7 @@ void listenToUpdateTimeSwitch() {
 }
 
 void listenToUpdateDaySwitch() {
-  if (switchManager.isUpdateDaySwitchPressed()) {
+  if (switchManager.isSwitchPressed(UPDATE_DAY_SWITCH)) {
     bool isTimeLeftForPowerbank = timeCalculator.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
     lightManager.blinkLight(lightManager.getPowerbankLight(isTimeLeftForPowerbank), BRIEF_MOMENT);
     softwareSerial.write(DAY_REQUEST);

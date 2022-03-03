@@ -6,10 +6,7 @@ class SwitchManager {
   public:
     SwitchManager(int stopAlarmOrSetHolidaySwitch, int powerbankChargedSwitch,
                   int updateTimeSwitch, int updateDaySwitch);
-    bool isStopAlarmOrSetHolidaySwitchPressed();
-    bool isPowerbankChargedSwitchPressed();
-    bool isUpdateTimeSwitchPressed();
-    bool isUpdateDaySwitchPressed();
+    bool isSwitchPressed(int switchNumber);
   private:
     int stopAlarmOrSetHolidaySwitch;
     int powerbankChargedSwitch;

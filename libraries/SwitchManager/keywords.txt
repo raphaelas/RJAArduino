@@ -1,9 +1,6 @@
-SwitchManager                          KEYWORD1
-isStopAlarmOrSetHolidaySwitchPressed   KEYWORD2
-isPowerbankChargedSwitchPressed        KEYWORD2
-isUpdateTimeSwitchPressed              KEYWORD2
-isUpdateDaySwitchPressed               KEYWORD2
-stopAlarmOrSetHolidaySwitch            KEYWORD2
-powerbankChargedSwitch                 KEYWORD2
-updateTimeSwitch                       KEYWORD2
-updateDaySwitch                        KEYWORD2
+SwitchManager                 KEYWORD1
+isSwitchPressed               KEYWORD2
+stopAlarmOrSetHolidaySwitch   KEYWORD2
+powerbankChargedSwitch        KEYWORD2
+updateTimeSwitch              KEYWORD2
+updateDaySwitch               KEYWORD2

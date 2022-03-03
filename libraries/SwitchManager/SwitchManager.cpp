@@ -13,18 +13,6 @@ SwitchManager::SwitchManager(int stopAlarmOrSetHolidaySwitch, int powerbankCharg
   pinMode(updateDaySwitch, INPUT);
 }
 
-bool SwitchManager::isStopAlarmOrSetHolidaySwitchPressed() {
-  return digitalRead(stopAlarmOrSetHolidaySwitch) == HIGH;
-}
-
-bool SwitchManager::isPowerbankChargedSwitchPressed() {
-  return digitalRead(powerbankChargedSwitch) == HIGH;
-}
-
-bool SwitchManager::isUpdateTimeSwitchPressed() {
-  return digitalRead(updateTimeSwitch) == HIGH;
-}
-
-bool SwitchManager::isUpdateDaySwitchPressed() {
-  return digitalRead(updateDaySwitch) == HIGH;
+bool SwitchManager::isSwitchPressed(int switchNumber) {
+  return digitalRead(switchNumber) == HIGH;
 }
