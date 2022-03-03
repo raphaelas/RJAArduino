@@ -1,0 +1,7 @@
+SerialManager           KEYWORD1
+sendMessage             KEYWORD2
+parseMessage            KEYWORD2
+restartSoftwareSerial   KEYWORD2
+softwareSerial          KEYWORD2
+rxPin                   KEYWORD2
+txPin                   KEYWORD2

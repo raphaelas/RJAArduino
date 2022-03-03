@@ -8,18 +8,16 @@
 #include <HebrewCharacterWriter.h>
 #include <SwitchManager.h>
 #include <LightManager.h>
-#include <SoftwareSerial.h>
+#include <SerialManager.h>
 
 TimeCalculator timeCalculator(STARTER_WAKEUP_TIME, STARTER_STARTING_DAY);
 HebrewCharacterWriter hebrewCharacterWriter(LCD_RS_PIN, LCD_E_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
+SerialManager serialManager(RX_PIN, TX_PIN);
 SwitchManager switchManager(STOP_ALARM_OR_SET_HOLIDAY_SWITCH, POWERBANK_CHARGED_SWITCH, UPDATE_TIME_SWITCH, UPDATE_DAY_SWITCH);
 LightManager lightManager(KEEP_POWERBANK_ALIVE_LED, POWERBANK_CHARGED_LED, POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED,
                           TIME_IS_BEING_SET_LED, DAY_IS_BEING_SET_LED);
 
-SoftwareSerial softwareSerial(RX_PIN, TX_PIN);
-
 void setup() {
-  softwareSerial.begin(38400);
   playStartUpNotes();
 }
 
@@ -152,9 +150,9 @@ void listenToUpdateTimeSwitch() {
   if (switchManager.isSwitchPressed(UPDATE_TIME_SWITCH)) {
     bool isTimeLeftForPowerbank = timeCalculator.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
     lightManager.blinkLight(lightManager.getPowerbankLight(isTimeLeftForPowerbank), BRIEF_MOMENT);
-    softwareSerial.write(TIME_REQUEST);
+    serialManager.sendMessage(TIME_REQUEST);
     splitDelayToKeepPowerbankOn(DELAY_BETWEEN_SWITCH_LISTENS);
-    long serialTimeIn = softwareSerial.parseInt();
+    long serialTimeIn = serialManager.parseMessage();
     if (serialTimeIn > 0) {
       long theTimeUntilWakeup = (serialTimeIn + millis()) % ONE_DAY;
       timeCalculator.setTime(theTimeUntilWakeup);
@@ -179,9 +177,9 @@ void listenToUpdateDaySwitch() {
   if (switchManager.isSwitchPressed(UPDATE_DAY_SWITCH)) {
     bool isTimeLeftForPowerbank = timeCalculator.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
     lightManager.blinkLight(lightManager.getPowerbankLight(isTimeLeftForPowerbank), BRIEF_MOMENT);
-    softwareSerial.write(DAY_REQUEST);
+    serialManager.sendMessage(DAY_REQUEST);
     splitDelayToKeepPowerbankOn(DELAY_BETWEEN_SWITCH_LISTENS);
-    int serialDayIn = softwareSerial.parseInt();
+    int serialDayIn = serialManager.parseMessage();
     if (serialDayIn > 0) {
       int theStartingDay = serialDayIn;
       timeCalculator.setDay(theStartingDay);
@@ -204,17 +202,8 @@ void listenToUpdateDaySwitch() {
 
 void handleSerialCommunicationFailed() {
   lightManager.blinkLight(POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED, BRIEF_MOMENT);
-  softwareSerial = SoftwareSerial(RX_PIN, TX_PIN);
-  softwareSerial.begin(38400);
+  serialManager.restartSoftwareSerial();
   splitDelayToKeepPowerbankOn(ONE_SECOND * 3);
-}
-
-void splitDelayToKeepPowerbankOn(int delayAmount) {
-  int delayIterations = delayAmount / BRIEF_MOMENT;
-  for (int i = 0; i < delayIterations; i++) {
-    keepPowerbankOn();
-    delay(BRIEF_MOMENT);
-  }
 }
 
 void listenToSwitches() {
@@ -228,6 +217,14 @@ void splitDelayToCheckForSwitchPress(int delayAmount) {
   int delayIterations = delayAmount / BRIEF_MOMENT;
   for (int i = 0; i < delayIterations; i++) {
     listenToSwitches();
+    delay(BRIEF_MOMENT);
+  }
+}
+
+void splitDelayToKeepPowerbankOn(int delayAmount) {
+  int delayIterations = delayAmount / BRIEF_MOMENT;
+  for (int i = 0; i < delayIterations; i++) {
+    keepPowerbankOn();
     delay(BRIEF_MOMENT);
   }
 }
