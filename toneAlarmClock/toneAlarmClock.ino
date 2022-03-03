@@ -4,12 +4,14 @@
 #include "musicalconstants.h"
 #include "pinmappingconstants.h"
 #include "tonealarmclockstructs.h"
-#include <TimeCalculations.h>
+#include <TimeCalculator.h>
 #include <HebrewCharacterWriter.h>
+#include <SwitchManager.h>
 #include <SoftwareSerial.h>
 
-TimeCalculations timeCalculations(STARTER_WAKEUP_TIME, STARTER_STARTING_DAY);
+TimeCalculator timeCalculator(STARTER_WAKEUP_TIME, STARTER_STARTING_DAY);
 HebrewCharacterWriter hebrewCharacterWriter(LCD_RS_PIN, LCD_E_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
+SwitchManager switchManager(STOP_ALARM_OR_SET_HOLIDAY_SWITCH, POWERBANK_CHARGED_SWITCH, UPDATE_TIME_SWITCH, UPDATE_DAY_SWITCH);
 
 SoftwareSerial softwareSerial(RX_PIN, TX_PIN);
 
@@ -19,10 +21,6 @@ void setup() {
   pinMode(POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED, OUTPUT);
   pinMode(TIME_IS_BEING_SET_LED, OUTPUT);
   pinMode(DAY_IS_BEING_SET_LED, OUTPUT);
-  pinMode(STOP_ALARM_OR_SET_HOLIDAY_SWITCH, INPUT);
-  pinMode(POWERBANK_CHARGED_SWITCH, INPUT);
-  pinMode(UPDATE_TIME_SWITCH, INPUT);
-  pinMode(UPDATE_DAY_SWITCH, INPUT);
   softwareSerial.begin(38400);
   playStartUpNotes();
 }
@@ -30,12 +28,12 @@ void setup() {
 void loop() {
   keepPowerbankOn();
   listenToSwitches();
-  Serial.println(timeCalculations.timeUntilWakeup);
-  if (timeCalculations.isTimeToSoundAlarm(isHoliday) && keepSoundingAlarmClock) {
+  Serial.println(timeCalculator.timeUntilWakeup);
+  if (timeCalculator.isTimeToSoundAlarm(isHoliday) && keepSoundingAlarmClock) {
     handleTimeToSoundAlarm();
-  } else if (timeCalculations.isTimeToSoundAlarm(isHoliday) && !keepSoundingAlarmClock) {
+  } else if (timeCalculator.isTimeToSoundAlarm(isHoliday) && !keepSoundingAlarmClock) {
     handleInBetweenStopButtonPressAndAlarmTimeEnding();
-  } else if (!timeCalculations.isTimeToSoundAlarm(isHoliday)) {
+  } else if (!timeCalculator.isTimeToSoundAlarm(isHoliday)) {
     handleNotTimeToSoundAlarm();
   }
 }
@@ -61,15 +59,15 @@ void handleNotTimeToSoundAlarm() {
   if (!hasResetLcdMessagePosition) {
     hebrewCharacterWriter.resetLcdMessagePosition();
     hasResetLcdMessagePosition = true;
-    bool isTimeLeftForPowerbank = timeCalculations.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
+    bool isTimeLeftForPowerbank = timeCalculator.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
     blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
   }
-  if (timeCalculations.dayIsWeekendDay() && !hasWrittenSofShavuahTov) {
+  if (timeCalculator.dayIsWeekendDay() && !hasWrittenSofShavuahTov) {
     hebrewCharacterWriter.writeSofShavuahTov();
     hasWrittenSofShavuahTov = true;
   } 
-  else if (!hasWrittenTimeUntilAlarmRecently && !timeCalculations.dayIsWeekendDay() && !isHoliday) {
-    HoursMinutesDuration hoursMinutesDuration = timeCalculations.calculateTimeLeftUntilAlarm();
+  else if (!hasWrittenTimeUntilAlarmRecently && !timeCalculator.dayIsWeekendDay() && !isHoliday) {
+    HoursMinutesDuration hoursMinutesDuration = timeCalculator.calculateTimeLeftUntilAlarm();
     hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(hoursMinutesDuration);
     hasWrittenTimeUntilAlarmRecently = true;
   } else if (millis() % ONE_MINUTE < LOW_SEVERITY_NOWISH) {
@@ -114,7 +112,7 @@ void blinkLight(int lightNumber) {
 
 void keepPowerbankOnWhileAlarmSounding() {
   if (countdownBlinkLightWhileAlarmSounding == 0) {
-    bool isTimeLeftForPowerbank = timeCalculations.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
+    bool isTimeLeftForPowerbank = timeCalculator.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
     blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
     countdownBlinkLightWhileAlarmSounding = ALARM_SOUNDING_POWERBANK_MAX_COUNTDOWN;
   } else {
@@ -125,7 +123,7 @@ void keepPowerbankOnWhileAlarmSounding() {
 void keepPowerbankOn() {
   int currentMillisWithinPowerbankKeepAliveCooldown = millis() % KEEP_POWERBANK_ALIVE_COOLDOWN;
   if (currentMillisWithinPowerbankKeepAliveCooldown < NOWISH) {
-    bool isTimeLeftForPowerbank = timeCalculations.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
+    bool isTimeLeftForPowerbank = timeCalculator.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
     blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
   }
 }
@@ -139,19 +137,18 @@ int getPowerbankLight(bool isTimeLeftForPowerbank) {
 }
 
 void checkStopAlarmOrSetHolidaySwitchState() {
-  int stopAlarmOrSetHolidaySwitchState = digitalRead(STOP_ALARM_OR_SET_HOLIDAY_SWITCH);
-  if (stopAlarmOrSetHolidaySwitchState == HIGH) {
-    if (timeCalculations.isTimeToSoundAlarm(isHoliday)) {
+  if (switchManager.isStopAlarmOrSetHolidaySwitchPressed()) {
+    if (timeCalculator.isTimeToSoundAlarm(isHoliday)) {
       keepSoundingAlarmClock = false;
-      bool isTimeLeftForPowerbank = timeCalculations.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
+      bool isTimeLeftForPowerbank = timeCalculator.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
       blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
     } else {
       isHoliday = !isHoliday;
       if (isHoliday) {
-        int dayNumber = timeCalculations.getDayNumber();
+        int dayNumber = timeCalculator.getDayNumber();
         hebrewCharacterWriter.writeChagSameach(dayNumber);
       } else {
-        HoursMinutesDuration hoursMinutesDuration = timeCalculations.calculateTimeLeftUntilAlarm();
+        HoursMinutesDuration hoursMinutesDuration = timeCalculator.calculateTimeLeftUntilAlarm();
         hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(hoursMinutesDuration);
       }
     }
@@ -160,8 +157,7 @@ void checkStopAlarmOrSetHolidaySwitchState() {
 }
 
 void checkPowerbankChargedSwitchState() {
-  int powerbankChargedSwitchState = digitalRead(POWERBANK_CHARGED_SWITCH);
-  if (powerbankChargedSwitchState == HIGH) {
+  if (switchManager.isPowerbankChargedSwitchPressed()) {
     powerbankChargedIteration = millis() / POWERBANK_LIFE;
     powerbankChargedCheckpoint = millis() % POWERBANK_LIFE;
     blinkLight(POWERBANK_CHARGED_LED);
@@ -170,24 +166,23 @@ void checkPowerbankChargedSwitchState() {
 }
 
 void listenToUpdateTimeSwitch() {
-  int updateTimeSwitchState = digitalRead(UPDATE_TIME_SWITCH);
-  if (updateTimeSwitchState == HIGH) {
-    bool isTimeLeftForPowerbank = timeCalculations.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
+  if (switchManager.isUpdateTimeSwitchPressed()) {
+    bool isTimeLeftForPowerbank = timeCalculator.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
     blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
     softwareSerial.write(TIME_REQUEST);
     splitDelayToKeepPowerbankOn(DELAY_BETWEEN_SWITCH_LISTENS);
     long serialTimeIn = softwareSerial.parseInt();
     if (serialTimeIn > 0) {
       long theTimeUntilWakeup = (serialTimeIn + millis()) % ONE_DAY;
-      timeCalculations.setTime(theTimeUntilWakeup);
+      timeCalculator.setTime(theTimeUntilWakeup);
       blinkLight(TIME_IS_BEING_SET_LED);
       keepSoundingAlarmClock = true;
-      bool shouldWriteSofShavuahTov = timeCalculations.dayIsWeekendDay();
+      bool shouldWriteSofShavuahTov = timeCalculator.dayIsWeekendDay();
       if (shouldWriteSofShavuahTov) {
         hebrewCharacterWriter.writeSofShavuahTov();
         hasWrittenSofShavuahTov = true;
       } else {
-        HoursMinutesDuration hoursMinutesDuration = timeCalculations.calculateTimeLeftUntilAlarm();
+        HoursMinutesDuration hoursMinutesDuration = timeCalculator.calculateTimeLeftUntilAlarm();
         hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(hoursMinutesDuration);
       }
     } else {
@@ -198,24 +193,23 @@ void listenToUpdateTimeSwitch() {
 }
 
 void listenToUpdateDaySwitch() {
-  int updateDaySwitchState = digitalRead(UPDATE_DAY_SWITCH);
-  if (updateDaySwitchState == HIGH) {
-    bool isTimeLeftForPowerbank = timeCalculations.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
+  if (switchManager.isUpdateDaySwitchPressed()) {
+    bool isTimeLeftForPowerbank = timeCalculator.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
     blinkLight(getPowerbankLight(isTimeLeftForPowerbank));
     softwareSerial.write(DAY_REQUEST);
     splitDelayToKeepPowerbankOn(DELAY_BETWEEN_SWITCH_LISTENS);
     int serialDayIn = softwareSerial.parseInt();
     if (serialDayIn > 0) {
       int theStartingDay = serialDayIn;
-      timeCalculations.setDay(theStartingDay);
+      timeCalculator.setDay(theStartingDay);
       blinkLight(DAY_IS_BEING_SET_LED);
       keepSoundingAlarmClock = true;
-      bool shouldWriteSofShavuahTov = timeCalculations.dayIsWeekendDay();
+      bool shouldWriteSofShavuahTov = timeCalculator.dayIsWeekendDay();
       if (shouldWriteSofShavuahTov) {
         hebrewCharacterWriter.writeSofShavuahTov();
         hasWrittenSofShavuahTov = true;
       } else {
-        HoursMinutesDuration hoursMinutesDuration = timeCalculations.calculateTimeLeftUntilAlarm();
+        HoursMinutesDuration hoursMinutesDuration = timeCalculator.calculateTimeLeftUntilAlarm();
         hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(hoursMinutesDuration);
       }
     } else {

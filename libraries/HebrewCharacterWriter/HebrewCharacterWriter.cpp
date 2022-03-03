@@ -1,5 +1,5 @@
-#include "Arduino.h"
 #include "HebrewCharacterWriter.h"
+#include "Arduino.h"
 #include "hebrewcharacters.h"
 #include "tonealarmclockstructs.h"
 

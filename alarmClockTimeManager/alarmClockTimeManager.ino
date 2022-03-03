@@ -186,40 +186,44 @@ void blinkOnboardLed() {
 void checkTimeIncreaseSwitchState() {
   int timeIncreaseSwitchState = digitalRead(TIME_INCREASE_SWITCH);
   if (timeIncreaseSwitchState == HIGH) {
-    long oldTime = readOldTime();
-    removeFile(ALARM_TIME_FILE_NAME);
-    long newTime = oldTime + (ONE_MINUTE * 10);
-    changeTime(newTime % ONE_DAY);
-    if (newTime >= ONE_DAY) {
-      changeDay(1);
-    }
-    blinkOnboardLed();
+    timeChangeAmount++;
+  } else if (timeChangeAmount > 0) {
+    changeTheTime(timeChangeAmount);
   }
 }
 
 void checkTimeDecreaseSwitchState() {
   int timeDecreaseSwitchState = digitalRead(TIME_DECREASE_SWITCH);
   if (timeDecreaseSwitchState == HIGH) {
-    long oldTime = readOldTime();
-    removeFile(ALARM_TIME_FILE_NAME);
-    long newTime = oldTime - (ONE_MINUTE * 10);
-    changeTime(newTime % ONE_DAY);
-    if (newTime < 0) {
-      changeDay(-1);
-    }
-    blinkOnboardLed();
+    timeChangeAmount--;
+  } else if (timeChangeAmount < 0) {
+    changeTheTime(timeChangeAmount);
   }
 }
 
-void changeDay(int dayDelta) {
+void changeTheTime(int timeChangeAmount) {
+  long oldTime = readOldTime();
+  removeFile(ALARM_TIME_FILE_NAME);
+  long newTime = oldTime + (ONE_MINUTE * 10 * timeChangeAmount);
+  changeTime(newTime % ONE_DAY);
+  if (newTime >= ONE_DAY) {
+    shiftDay(1);
+  } else if (newTime < 0) {
+    shiftDay(-1);
+  }
+  timeChangeAmount = 0;
+  blinkOnboardLed();
+}
+
+void shiftDay(int dayDelta) {
   int oldDay = readOldDay();
   removeFile(ALARM_DAY_FILE_NAME);
   int newDay = oldDay + dayDelta;
   int newDayWrappedAround = ((newDay - 1) % DAYS_IN_WEEK) + 1;
-  alterDay(newDayWrappedAround);
+  changeDay(newDayWrappedAround);
 }
 
-void alterDay(int newDay) {
+void changeDay(int newDay) {
   File alarmDayFile = SD.open(ALARM_DAY_FILE_NAME, FILE_WRITE);
   if (alarmDayFile) {
     alarmDayFile.println(newDay);
