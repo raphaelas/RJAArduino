@@ -5,3 +5,4 @@ restartSoftwareSerial   KEYWORD2
 softwareSerial          KEYWORD2
 rxPin                   KEYWORD2
 txPin                   KEYWORD2
+BAUD_RATE               LITERAL1

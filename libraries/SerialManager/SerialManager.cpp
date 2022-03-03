@@ -5,7 +5,7 @@ SerialManager::SerialManager(int rxPin, int txPin) {
   this->rxPin = rxPin;
   this->txPin = txPin;
   softwareSerial = new SoftwareSerial(rxPin, txPin);
-  softwareSerial->begin(38400);
+  softwareSerial->begin(BAUD_RATE);
 }
 
 void SerialManager::sendMessage(char * message) {
@@ -19,5 +19,5 @@ long SerialManager::parseMessage() {
 void SerialManager::restartSoftwareSerial() {
   delete(softwareSerial);
   softwareSerial = new SoftwareSerial(rxPin, txPin);
-  softwareSerial->begin(38400);
+  softwareSerial->begin(BAUD_RATE);
 }
