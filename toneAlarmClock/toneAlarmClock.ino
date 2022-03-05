@@ -57,9 +57,9 @@ void handleTimeToSoundAlarm() {
 }
 
 bool soundAlarmAndScrollMessage(int currentNote, bool keepSoundingAlarmClock) {
-  bool isDone = piezoManager.soundAlarm(currentNote, currentNote + 5, keepSoundingAlarmClock);
+  bool isAlarmTuneDone = piezoManager.soundAlarm(currentNote, currentNote + 5, keepSoundingAlarmClock);
   hebrewCharacterWriter.scrollLcdMessage();
-  return isDone;
+  return isAlarmTuneDone;
 }
 
 void handleNotTimeToSoundAlarm() {
