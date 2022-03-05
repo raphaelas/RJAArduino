@@ -9,6 +9,7 @@
 #include <SwitchManager.h>
 #include <LightManager.h>
 #include <SerialManager.h>
+#include <PiezoManager.h>
 #include <Scheduler.h>
 
 TimeCalculator timeCalculator(STARTER_WAKEUP_TIME, STARTER_STARTING_DAY);
@@ -17,11 +18,11 @@ SerialManager serialManager(RX_PIN, TX_PIN);
 SwitchManager switchManager(STOP_ALARM_OR_SET_HOLIDAY_SWITCH, POWERBANK_CHARGED_SWITCH, UPDATE_TIME_SWITCH, UPDATE_DAY_SWITCH);
 LightManager lightManager(KEEP_POWERBANK_ALIVE_LED, POWERBANK_CHARGED_LED, POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED,
                           TIME_IS_BEING_SET_LED, DAY_IS_BEING_SET_LED);
+PiezoManager piezoManager(PIEZO_PIN);
 
 void setup() {
-  Scheduler.startLoop(listenForStopButtonPressLoop);
-  Scheduler.startLoop(keepPowerbankOnLoop);
-  playStartUpNotes();
+  Scheduler.startLoop(keepPowerbankOnAndListenToSwitchesLoop);
+  piezoManager.playStartUpNotes();
 }
 
 void loop() {
@@ -35,37 +36,35 @@ void loop() {
   yield();
 }
 
+void keepPowerbankOnAndListenToSwitchesLoop() {
+  keepPowerbankOn();
+  listenToSwitches();
+  yield();
+}
+
 void handleTimeToSoundAlarm() {
   if (!hasWrittenBokerTov) {
     hebrewCharacterWriter.writeBokerTov();
     hasWrittenBokerTov = true;
     hasResetLcdMessagePosition = false;
   }
-  soundAlarm(0, ALARM_NOTE_COUNT / 2);
-  hebrewCharacterWriter.scrollLcdMessage();
-  soundAlarm(ALARM_NOTE_COUNT / 2, ALARM_NOTE_COUNT);
-  hebrewCharacterWriter.scrollLcdMessage();
-  keepPowerbankOnWhileAlarmSounding();
+  int currentNote = 0;
+  bool isDone = false;
+  while (!isDone) {
+    isDone = alternateBetweenAlarmAndScrolling(currentNote, keepSoundingAlarmClock);
+    currentNote += 5;  
+  }
   delay(DELAY_BETWEEN_REPEATS);
 }
 
-void listenForStopButtonPressLoop() {
-  if (!keepSoundingAlarmClock || !timeCalculator.isTimeToSoundAlarm(isHoliday)) {
-    yield();
-  }
-  checkStopAlarmOrSetHolidaySwitchState();
-  yield();
-}
-
-void keepPowerbankOnLoop() {
-  keepPowerbankOn();
-  listenToSwitches();
-  yield();
+bool alternateBetweenAlarmAndScrolling(int currentNote, bool keepSoundingAlarmClock) {
+  bool isDone = piezoManager.soundAlarm(currentNote, currentNote + 5, keepSoundingAlarmClock);
+  hebrewCharacterWriter.scrollLcdMessage();
+  return isDone;
 }
 
 void handleNotTimeToSoundAlarm() {
   keepSoundingAlarmClock = true;
-  countdownBlinkLightWhileAlarmSounding = 0;
   hasWrittenBokerTov = false;
   if (!hasResetLcdMessagePosition) {
     hebrewCharacterWriter.resetLcdMessagePosition();
@@ -90,39 +89,6 @@ void handleInBetweenStopButtonPressAndAlarmTimeEnding() {
   if (!hasResetLcdMessagePosition) {
     hebrewCharacterWriter.resetLcdMessagePosition();
     hasResetLcdMessagePosition = true;
-  }
-}
-
-void soundAlarm(int startingNote, int endingNote) {
-  for (int note = startingNote; note < endingNote; note++) {
-    if (keepSoundingAlarmClock) {
-      playNote(ALARM_NOTES[note], ALARM_NOTE_DURATIONS[note], keepSoundingAlarmClock);
-    }
-  }
-}
-
-void playNote(int noteToPlay, int noteDuration, bool keepSoundingAlarmClock) {
-  if (keepSoundingAlarmClock) {
-    tone(PIEZO_PIN, noteToPlay, noteDuration);
-    int pauseBetweenNotes = noteDuration * RECOMMENDED_NOTE_PAUSE_MULTIPLIER;
-    delay(pauseBetweenNotes);
-    noTone(PIEZO_PIN);
-  }
-}
-
-void playStartUpNotes() {
-  for (int note = 0; note < STARTUP_NOTE_COUNT; note++) {
-    playNote(START_UP_NOTES[note], START_UP_NOTE_DURATIONS[note], keepSoundingAlarmClock);
-  }
-}
-
-void keepPowerbankOnWhileAlarmSounding() {
-  if (countdownBlinkLightWhileAlarmSounding == 0) {
-    bool isTimeLeftForPowerbank = timeCalculator.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
-    lightManager.blinkLight(lightManager.getPowerbankLight(isTimeLeftForPowerbank), BRIEF_MOMENT);
-    countdownBlinkLightWhileAlarmSounding = ALARM_SOUNDING_POWERBANK_MAX_COUNTDOWN;
-  } else {
-    countdownBlinkLightWhileAlarmSounding--;
   }
 }
 

@@ -3,7 +3,7 @@
 
 // These two variables should be set through an SD card over serial communication
 // via the alarmClockTimeManager project however some starter values are needed.
-const long STARTER_WAKEUP_TIME = ONE_MINUTE * 4;
+const long STARTER_WAKEUP_TIME = ONE_MINUTE / 6;
 const int STARTER_STARTING_DAY = TUESDAY;
 
 const int DELAY_BETWEEN_REPEATS = ONE_SECOND / 2, DELAY_BETWEEN_SWITCH_LISTENS = DELAY_BETWEEN_REPEATS;
@@ -13,7 +13,6 @@ const int DELAY_BETWEEN_REPEATS = ONE_SECOND / 2, DELAY_BETWEEN_SWITCH_LISTENS =
 // 15 seconds.
 const int KEEP_POWERBANK_ALIVE_COOLDOWN = ONE_SECOND * 15;
 const int COOLDOWN_BETWEEN_SERIAL_COMMUNICATION_FAILURES = ONE_SECOND * 3;
-const int ALARM_SOUNDING_POWERBANK_MAX_COUNTDOWN = 3;
 
 const int BRIEF_MOMENT = 50;
 const int NOWISH = BRIEF_MOMENT;
