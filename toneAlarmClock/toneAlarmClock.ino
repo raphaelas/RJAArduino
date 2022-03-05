@@ -128,8 +128,8 @@ void listenToUpdateTimeSwitch() {
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
     long serialTimeIn = serialManager.parseMessage();
     if (serialTimeIn > 0) {
-      long theTimeUntilWakeup = (serialTimeIn + millis()) % ONE_DAY;
-      timeCalculator.setTime(theTimeUntilWakeup);
+      long timeUntilWakeup = (serialTimeIn + millis()) % ONE_DAY;
+      timeCalculator.setTime(timeUntilWakeup);
       lightManager.blinkLight(TIME_IS_BEING_SET_LED, BRIEF_MOMENT);
       keepSoundingAlarmClock = true;
       bool shouldWriteSofShavuahTov = timeCalculator.dayIsWeekendDay();
@@ -155,8 +155,8 @@ void listenToUpdateDaySwitch() {
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
     int serialDayIn = serialManager.parseMessage();
     if (serialDayIn > 0) {
-      int theStartingDay = serialDayIn;
-      timeCalculator.setDay(theStartingDay);
+      int startingDay = serialDayIn;
+      timeCalculator.setDay(startingDay);
       lightManager.blinkLight(DAY_IS_BEING_SET_LED, BRIEF_MOMENT);
       keepSoundingAlarmClock = true;
       bool shouldWriteSofShavuahTov = timeCalculator.dayIsWeekendDay();
