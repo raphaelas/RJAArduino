@@ -20,3 +20,5 @@ const int LOW_SEVERITY_NOWISH = 5;
 
 const char * TIME_REQUEST = "timeplease";
 const char * DAY_REQUEST = "dayplease";
+
+const int NOTES_PER_LCD_SCROLL = 5;

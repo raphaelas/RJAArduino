@@ -51,13 +51,13 @@ void handleTimeToSoundAlarm() {
   bool isAlarmTuneDone = false;
   while (!isAlarmTuneDone) {
     isAlarmTuneDone = soundAlarmAndScrollMessage(currentNote, keepSoundingAlarmClock);
-    currentNote += 5;  
+    currentNote += NOTES_PER_LCD_SCROLL;  
   }
   delay(DELAY_BETWEEN_REPEATS);
 }
 
 bool soundAlarmAndScrollMessage(int currentNote, bool keepSoundingAlarmClock) {
-  bool isAlarmTuneDone = piezoManager.soundAlarm(currentNote, currentNote + 5, keepSoundingAlarmClock);
+  bool isAlarmTuneDone = piezoManager.soundAlarm(currentNote, currentNote + NOTES_PER_LCD_SCROLL, keepSoundingAlarmClock);
   hebrewCharacterWriter.scrollLcdMessage();
   return isAlarmTuneDone;
 }
