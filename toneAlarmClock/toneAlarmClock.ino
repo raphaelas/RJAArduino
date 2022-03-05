@@ -9,7 +9,7 @@
 #include <LightManager.h>
 #include <SerialManager.h>
 #include <PiezoManager.h>
-#include <Scheduler.h>
+#include <Scheduler.h>   // This is mikaelpatel's Arduino-Scheduler
 
 TimeCalculator timeCalculator(STARTER_WAKEUP_TIME, STARTER_STARTING_DAY);
 HebrewCharacterWriter hebrewCharacterWriter(LCD_RS_PIN, LCD_E_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
@@ -88,14 +88,6 @@ void handleInBetweenStopButtonPressAndAlarmTimeEnding() {
   if (!hasResetLcdMessagePosition) {
     hebrewCharacterWriter.resetLcdMessagePosition();
     hasResetLcdMessagePosition = true;
-  }
-}
-
-void keepPowerbankOn() {
-  int currentMillisWithinPowerbankKeepAliveCooldown = millis() % KEEP_POWERBANK_ALIVE_COOLDOWN;
-  if (currentMillisWithinPowerbankKeepAliveCooldown < NOWISH) {
-    bool isTimeLeftForPowerbank = timeCalculator.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
-    lightManager.blinkLight(lightManager.getPowerbankLight(isTimeLeftForPowerbank), BRIEF_MOMENT);
   }
 }
 
@@ -186,6 +178,15 @@ void handleSerialCommunicationFailed() {
   lightManager.blinkLight(POWERBANK_IS_LOW_OR_SERIAL_COMMUNICATION_FAILED_LED, BRIEF_MOMENT);
   serialManager.restartSoftwareSerial();
   delay(ONE_SECOND * 3);
+}
+
+
+void keepPowerbankOn() {
+  int currentMillisWithinPowerbankKeepAliveCooldown = millis() % KEEP_POWERBANK_ALIVE_COOLDOWN;
+  if (currentMillisWithinPowerbankKeepAliveCooldown < NOWISH) {
+    bool isTimeLeftForPowerbank = timeCalculator.isTimeLeftForPowerbank(powerbankChargedIteration, powerbankChargedCheckpoint);
+    lightManager.blinkLight(lightManager.getPowerbankLight(isTimeLeftForPowerbank), BRIEF_MOMENT);
+  }
 }
 
 void listenToSwitches() {
