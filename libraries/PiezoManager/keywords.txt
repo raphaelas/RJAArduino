@@ -1,0 +1,8 @@
+PiezoManager         KEYWORD1
+playNote             KEYWORD2
+playStartUpNotes     KEYWORD2
+soundAlarm           KEYWORD2
+piezoPin             KEYWORD2
+alarmNoteCount       KEYWORD2
+alarmNotes           KEYWORD2
+alarmNoteDurations   KEYWORD2
