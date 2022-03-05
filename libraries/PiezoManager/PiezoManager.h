@@ -11,6 +11,9 @@ class PiezoManager {
     bool soundAlarm(int startingNote, int endingNote, bool keepSoundingAlarmClock);
   private:
     int piezoPin;
+    int alarmNoteCount;
+    int * alarmNotes;
+    int * alarmNoteDurations;
 };
 
 #endif

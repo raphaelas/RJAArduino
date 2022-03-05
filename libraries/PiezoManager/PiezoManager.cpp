@@ -3,6 +3,11 @@
 
 PiezoManager::PiezoManager(int piezoPin) {
   this->piezoPin = piezoPin;
+  this->alarmNoteCount = STARTER_ALARM_NOTE_COUNT;
+  this->alarmNotes = new int[alarmNoteCount];
+  this->alarmNoteDurations = new int[alarmNoteCount];
+  memcpy(alarmNotes, STARTER_ALARM_NOTES, alarmNoteCount * sizeof (int));
+  memcpy(alarmNoteDurations, STARTER_ALARM_NOTE_DURATIONS, alarmNoteCount * sizeof (int));
 }
 
 void PiezoManager::playNote(int noteToPlay, int noteDuration, bool keepSoundingAlarmClock) {
@@ -21,11 +26,11 @@ void PiezoManager::playStartUpNotes() {
 }
 
 bool PiezoManager::soundAlarm(int startingNote, int endingNote, bool keepSoundingAlarmClock) {
-  endingNote = min(endingNote, ALARM_NOTE_COUNT);
+  endingNote = min(endingNote, alarmNoteCount);
   for (int note = startingNote; note < endingNote; note++) {
     if (keepSoundingAlarmClock) {
-      playNote(ALARM_NOTES[note], ALARM_NOTE_DURATIONS[note], keepSoundingAlarmClock);
+      playNote(alarmNotes[note], alarmNoteDurations[note], keepSoundingAlarmClock);
     }
   }
-  return endingNote == ALARM_NOTE_COUNT;
+  return endingNote == alarmNoteCount;
 }
