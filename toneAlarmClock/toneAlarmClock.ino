@@ -49,15 +49,15 @@ void handleTimeToSoundAlarm() {
     hasResetLcdMessagePosition = false;
   }
   int currentNote = 0;
-  bool isDone = false;
-  while (!isDone) {
-    isDone = alternateBetweenAlarmAndScrolling(currentNote, keepSoundingAlarmClock);
+  bool isAlarmTuneDone = false;
+  while (!isAlarmTuneDone) {
+    isAlarmTuneDone = soundAlarmAndScrollMessage(currentNote, keepSoundingAlarmClock);
     currentNote += 5;  
   }
   delay(DELAY_BETWEEN_REPEATS);
 }
 
-bool alternateBetweenAlarmAndScrolling(int currentNote, bool keepSoundingAlarmClock) {
+bool soundAlarmAndScrollMessage(int currentNote, bool keepSoundingAlarmClock) {
   bool isDone = piezoManager.soundAlarm(currentNote, currentNote + 5, keepSoundingAlarmClock);
   hebrewCharacterWriter.scrollLcdMessage();
   return isDone;

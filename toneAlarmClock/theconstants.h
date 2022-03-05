@@ -3,7 +3,7 @@
 
 // These two variables should be set through an SD card over serial communication
 // via the alarmClockTimeManager project however some starter values are needed.
-const long STARTER_WAKEUP_TIME = ONE_MINUTE / 6;
+const long STARTER_WAKEUP_TIME = ONE_MINUTE * 4;
 const int STARTER_STARTING_DAY = TUESDAY;
 
 const int DELAY_BETWEEN_REPEATS = ONE_SECOND / 2, DELAY_BETWEEN_SWITCH_LISTENS = DELAY_BETWEEN_REPEATS;
