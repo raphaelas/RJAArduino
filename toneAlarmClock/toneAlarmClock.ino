@@ -9,7 +9,7 @@
 #include <LightManager.h>
 #include <SerialManager.h>
 #include <PiezoManager.h>
-#include <Scheduler.h>   // This is mikaelpatel's Arduino-Scheduler
+#include <Scheduler.h>   // This is mikaelpatel's Arduino-Scheduler for Uno compatibility
 
 TimeCalculator timeCalculator(STARTER_WAKEUP_TIME, STARTER_STARTING_DAY);
 HebrewCharacterWriter hebrewCharacterWriter(LCD_RS_PIN, LCD_E_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
@@ -76,9 +76,7 @@ void handleNotTimeToSoundAlarm() {
     hasWrittenSofShavuahTov = true;
   } 
   else if (!hasWrittenTimeUntilAlarmRecently && !timeCalculator.dayIsWeekendDay() && !isHoliday) {
-    HoursMinutesDuration hoursMinutesDuration = timeCalculator.calculateTimeLeftUntilAlarm();
-    hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(hoursMinutesDuration);
-    hasWrittenTimeUntilAlarmRecently = true;
+    updateTimeUntilAlarm();
   } else if (millis() % ONE_MINUTE < LOW_SEVERITY_NOWISH) {
     hasWrittenTimeUntilAlarmRecently = false;
   }
@@ -103,8 +101,7 @@ void checkStopAlarmOrSetHolidaySwitchState() {
         int dayNumber = timeCalculator.getDayNumber();
         hebrewCharacterWriter.writeChagSameach(dayNumber);
       } else {
-        HoursMinutesDuration hoursMinutesDuration = timeCalculator.calculateTimeLeftUntilAlarm();
-        hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(hoursMinutesDuration);
+        updateTimeUntilAlarm();
       }
     }
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
@@ -137,8 +134,7 @@ void listenToUpdateTimeSwitch() {
         hebrewCharacterWriter.writeSofShavuahTov();
         hasWrittenSofShavuahTov = true;
       } else {
-        HoursMinutesDuration hoursMinutesDuration = timeCalculator.calculateTimeLeftUntilAlarm();
-        hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(hoursMinutesDuration);
+        updateTimeUntilAlarm();
       }
     } else {
       handleSerialCommunicationFailed();
@@ -164,8 +160,7 @@ void listenToUpdateDaySwitch() {
         hebrewCharacterWriter.writeSofShavuahTov();
         hasWrittenSofShavuahTov = true;
       } else {
-        HoursMinutesDuration hoursMinutesDuration = timeCalculator.calculateTimeLeftUntilAlarm();
-        hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(hoursMinutesDuration);
+        updateTimeUntilAlarm();
       }
     } else {
       handleSerialCommunicationFailed();
@@ -180,6 +175,11 @@ void handleSerialCommunicationFailed() {
   delay(ONE_SECOND * 3);
 }
 
+void updateTimeUntilAlarm() {
+  HoursMinutesDuration hoursMinutesDuration = timeCalculator.calculateTimeLeftUntilAlarm();
+  hebrewCharacterWriter.writeTimeLeftUntilAlarmToLcd(hoursMinutesDuration);
+  hasWrittenTimeUntilAlarmRecently = true;
+}
 
 void keepPowerbankOn() {
   int currentMillisWithinPowerbankKeepAliveCooldown = millis() % KEEP_POWERBANK_ALIVE_COOLDOWN;
