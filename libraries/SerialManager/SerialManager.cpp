@@ -1,5 +1,4 @@
 #include "SerialManager.h"
-#include "Arduino.h"
 
 SerialManager::SerialManager(int rxPin, int txPin) {
   this->rxPin = rxPin;

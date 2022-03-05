@@ -1,5 +1,4 @@
 #include "LightManager.h"
-#include "Arduino.h"
 
 LightManager::LightManager(int keepPowerbankAliveLed, int powerbankChargedLed, int powerbankIsLowOrSerialCommunicationFailedLed,
              int timeIsBeingSetLed, int dayIsBeingSetLed) {

@@ -1,5 +1,4 @@
 #include "TimeCalculator.h"
-#include "Arduino.h"
 #include "weekdays.h"
 #include "timeconstants.h"
 #include "tonealarmclockstructs.h"

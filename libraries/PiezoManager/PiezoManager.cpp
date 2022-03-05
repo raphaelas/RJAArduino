@@ -1,13 +1,14 @@
 #include "PiezoManager.h"
-#include "Arduino.h"
 
 PiezoManager::PiezoManager(int piezoPin) {
   this->piezoPin = piezoPin;
   this->alarmNoteCount = STARTER_ALARM_NOTE_COUNT;
   this->alarmNotes = new int[alarmNoteCount];
   this->alarmNoteDurations = new int[alarmNoteCount];
-  memcpy(alarmNotes, STARTER_ALARM_NOTES, alarmNoteCount * sizeof (int));
-  memcpy(alarmNoteDurations, STARTER_ALARM_NOTE_DURATIONS, alarmNoteCount * sizeof (int));
+  int memorySizeOfInt = sizeof (int);
+  int memorySizeOfStarterAlarmNotesArray = memorySizeOfInt * alarmNoteCount;
+  memcpy(alarmNotes, STARTER_ALARM_NOTES, memorySizeOfStarterAlarmNotesArray);
+  memcpy(alarmNoteDurations, STARTER_ALARM_NOTE_DURATIONS, memorySizeOfStarterAlarmNotesArray);
 }
 
 void PiezoManager::playNote(int noteToPlay, int noteDuration, bool keepSoundingAlarmClock) {

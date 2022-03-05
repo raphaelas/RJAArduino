@@ -1,5 +1,4 @@
 #include "SwitchManager.h"
-#include "Arduino.h"
 
 SwitchManager::SwitchManager(int stopAlarmOrSetHolidaySwitch, int powerbankChargedSwitch,
               int updateTimeSwitch, int updateDaySwitch) {
