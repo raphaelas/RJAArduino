@@ -9,8 +9,8 @@ String appKey = "APP_KEY_GOES_HERE";
 const int RETRY_SWITCH = 7;
 const int mode = 1;
 const char ARDUINO_CURRENT_VERSION[] = "ARD-078 1.2.3";
+
 bool isConnected = false;
-long startMilliseconds;
 
 void setup() {
   pinMode(RETRY_SWITCH, INPUT);
@@ -41,7 +41,7 @@ void loop() {
 
 void doConnect() {
   Serial.println("Connecting/activating.");
-  startMilliseconds = millis();
+  long startMilliseconds = millis();
   isConnected = modem.joinOTAA(appEui, appKey);
   if (!isConnected) {
     Serial.println("Something went wrong. Are you indoors? Move near a window and retry."); 
