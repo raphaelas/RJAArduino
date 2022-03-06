@@ -1,9 +1,3 @@
-/*
-  First Configuration
-  This sketch demonstrates the usage of MKR WAN 1300/1310 LoRa module.
-  This example code is in the public domain.
-*/
-
 #include <MKRWAN.h>
 #define ONE_SECOND   1000
 LoRaModem modem;
@@ -13,9 +7,6 @@ LoRaModem modem;
 
 String appEui = "0000000000000000";
 String appKey = "APP_KEY_GOES_HERE";
-String devAddr;
-String nwkSKey;
-String appSKey;
 bool connected = false;
 const int RETRY_SWITCH = 7;
 int mode = 1;
@@ -29,7 +20,7 @@ void setup() {
   // change this to your regional band (eg. US915, AS923, ...)
   if (!modem.begin(US915)) {
     Serial.println("Failed to start module");
-    while (1);
+    while (true);
   };
   Serial.print("Your module version is: ");
   Serial.println(modem.version());
@@ -39,13 +30,6 @@ void setup() {
   }
   Serial.print("Your device EUI is: ");
   Serial.println(modem.deviceEUI());
-  Serial.println("Connecting.");
-  connected = modem.joinOTAA(appEui, appKey);
-  if (!connected) {
-    Serial.println("Something went wrong. Are you indoors? Move near a window and retry.");
-  } else {
-    doSendMessage();
-  }
 }
 
 void loop() {
@@ -69,7 +53,7 @@ void doSendMessage() {
   modem.setPort(3);
   modem.beginPacket();
   modem.print("HeLoRA world!");
-  int err = modem.endPacket(false);
+  int err = modem.endPacket(true);
   if (err > 0) {
     Serial.println("Message sent correctly!");
   } else {
