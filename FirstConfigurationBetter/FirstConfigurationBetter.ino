@@ -6,10 +6,11 @@ LoRaModem modem;
 // LoRaModem modem(Serial1);
 
 String appEui = "0000000000000000";
-String appKey = "";
+String appKey = "APP_KEY_GOES_HERE";
 bool connected = false;
 const int RETRY_SWITCH = 7;
 int mode = 1;
+long startMilliseconds;
 
 void setup() {
   pinMode(RETRY_SWITCH, INPUT);
@@ -35,20 +36,22 @@ void setup() {
 void loop() {
   while (!connected) {
     Serial.println("Connecting.");
+    startMilliseconds = millis();
     connected = modem.joinOTAA(appEui, appKey);
     if (!connected) {
       Serial.println("Something went wrong. Are you indoors? Move near a window and retry."); 
       Serial.println("Waiting before trying again.");
       delay(long(ONE_SECOND) * 90);
+    } else {
+      Serial.println("Connected. Waiting 5 seconds.");
+      Serial.println((millis() - startMilliseconds) / ONE_SECOND);
+      delay(ONE_SECOND * 5);
     }
   }
   doSendMessage();
 }
 
 void doSendMessage() {
-  Serial.println("Connected. Waiting 5 seconds.");
-  Serial.println(millis() / ONE_SECOND);
-  delay(ONE_SECOND * 5);
   Serial.println("Sending message.");
   modem.setPort(3);
   modem.beginPacket();
