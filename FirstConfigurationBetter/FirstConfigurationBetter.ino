@@ -1,15 +1,15 @@
 #include <MKRWAN.h>
 #define ONE_SECOND   1000
-LoRaModem modem;
 
-// Uncomment if using the Murata chip as a module
-// LoRaModem modem(Serial1);
+LoRaModem modem;
 
 String appEui = "0000000000000000";
 String appKey = "APP_KEY_GOES_HERE";
-bool isConnected = false;
+
 const int RETRY_SWITCH = 7;
-int mode = 1;
+const int mode = 1;
+const char ARDUINO_CURRENT_VERSION[] = "ARD-078 1.2.3";
+bool isConnected = false;
 long startMilliseconds;
 
 void setup() {
@@ -24,7 +24,7 @@ void setup() {
   };
   Serial.print("Your module version is: ");
   Serial.println(modem.version());
-  if (modem.version() != ARDUINO_FW_VERSION) {
+  if (modem.version() != ARDUINO_CURRENT_VERSION) {
     Serial.println("Please make sure that the latest modem firmware is installed.");
     Serial.println("To update the firmware upload the 'MKRWANFWUpdate_standalone.ino' sketch.");
   }
