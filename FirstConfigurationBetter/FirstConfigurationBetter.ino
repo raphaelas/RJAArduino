@@ -2,6 +2,8 @@
 #include "credentials.h"
 
 #define ONE_SECOND   1000
+#define ONE_MINUTE   long(ONE_SECOND) * 60
+#define JOIN_TIMEOUT ONE_MINUTE * 3
 
 LoRaModem modem;
 
@@ -11,7 +13,12 @@ const int RETRY_SWITCH = 7;
 const int mode = 1;
 const char ARDUINO_CURRENT_VERSION[] = "ARD-078 1.2.3";
 
+const int LORA_PORT = 3;
+const char * HELLO_WORLD_MESSAGE = "HelLoRA world!";
+
 bool isConnected = false;
+
+// Remember to 
 
 void setup() {
   pinMode(RETRY_SWITCH, INPUT);
@@ -29,7 +36,7 @@ void setup() {
     Serial.println("Please make sure that the latest modem firmware is installed.");
     Serial.println("To update the firmware upload the 'MKRWANFWUpdate_standalone.ino' sketch.");
   }
-  Serial.print("Your device EUI is: ");
+  Serial.print("Your device EUI (DevEUI) is: ");
   Serial.println(modem.deviceEUI());
 }
 
@@ -43,24 +50,23 @@ void loop() {
 void doConnect() {
   Serial.println("Connecting/activating.");
   long startMilliseconds = millis();
-  isConnected = modem.joinOTAA(appEui, appKey);
+  isConnected = modem.joinOTAA(appEui, appKey, JOIN_TIMEOUT);
   if (!isConnected) {
-    Serial.println("Something went wrong. Are you indoors? Move near a window and retry."); 
-    Serial.println("Waiting before trying again.");
-    delay(long(ONE_SECOND) * 90);
+    Serial.println("Connection/activation failed. Are you indoors? Move near a window and retry."); 
   } else {
-    Serial.println("Connected. Waiting 5 seconds.");
+    Serial.println("Connected.");
     Serial.print("Connection seconds: ");
     Serial.println((millis() - startMilliseconds) / ONE_SECOND);
-    delay(ONE_SECOND * 5);
+    Serial.println("Waiting 2 minutes.");
+    delay(ONE_MINUTE * 2);
   }
 }
 
 void doSendMessage() {
   Serial.println("Sending message.");
-  modem.setPort(3);
+  modem.setPort(LORA_PORT);
   modem.beginPacket();
-  modem.print("HeLoRA world!");
+  modem.print(HELLO_WORLD_MESSAGE);
   int err = modem.endPacket(false);
   if (err > 0) {
     Serial.println("Message sent correctly!");
@@ -70,7 +76,7 @@ void doSendMessage() {
   Serial.print("Send code: ");
   Serial.println(err);
   Serial.println("Waiting 2 minutes before retry allowed.");
-  delay(long(ONE_SECOND) * 120);
+  delay(ONE_MINUTE * 2);
   Serial.println("Now you can try again.");
   while (digitalRead(RETRY_SWITCH) == LOW);
 }
