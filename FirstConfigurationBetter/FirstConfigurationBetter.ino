@@ -1,10 +1,11 @@
 #include <MKRWAN.h>
+#include "credentials.h"
+
 #define ONE_SECOND   1000
 
 LoRaModem modem;
 
-String appEui = "0000000000000000";
-String appKey = "APP_KEY_GOES_HERE";
+const String appEui = "0000000000000000";
 
 const int RETRY_SWITCH = 7;
 const int mode = 1;
