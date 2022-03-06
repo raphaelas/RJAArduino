@@ -50,6 +50,7 @@ void doConnect() {
     delay(long(ONE_SECOND) * 90);
   } else {
     Serial.println("Connected. Waiting 5 seconds.");
+    Serial.print("Connection seconds: ");
     Serial.println((millis() - startMilliseconds) / ONE_SECOND);
     delay(ONE_SECOND * 5);
   }
@@ -60,12 +61,13 @@ void doSendMessage() {
   modem.setPort(3);
   modem.beginPacket();
   modem.print("HeLoRA world!");
-  int err = modem.endPacket(true);
+  int err = modem.endPacket(false);
   if (err > 0) {
     Serial.println("Message sent correctly!");
   } else {
     Serial.println("Error sending message :(");
   }
+  Serial.print("Send code: ");
   Serial.println(err);
   Serial.println("Waiting 2 minutes before retry allowed.");
   delay(long(ONE_SECOND) * 120);
