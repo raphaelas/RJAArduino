@@ -16,11 +16,10 @@ void setup() {
   pinMode(RETRY_SWITCH, INPUT);
   Serial.begin(9600);
   while (!Serial);
-  Serial.println("Welcome to MKR WAN 1300/1310 first configuration sketch");
-  Serial.println("Register to your favourite LoRa network and we are ready to go!");
+  Serial.println("MKR WAN 1300/1310 LoRaWAN activation sketch.");
   // change this to your regional band (eg. US915, AS923, ...)
   if (!modem.begin(US915)) {
-    Serial.println("Failed to start module");
+    Serial.println("Failed to start module. Did you select your region?");
     while (true);
   };
   Serial.print("Your module version is: ");
@@ -35,20 +34,24 @@ void setup() {
 
 void loop() {
   while (!isConnected) {
-    Serial.println("Connecting.");
-    startMilliseconds = millis();
-    isConnected = modem.joinOTAA(appEui, appKey);
-    if (!isConnected) {
-      Serial.println("Something went wrong. Are you indoors? Move near a window and retry."); 
-      Serial.println("Waiting before trying again.");
-      delay(long(ONE_SECOND) * 90);
-    } else {
-      Serial.println("Connected. Waiting 5 seconds.");
-      Serial.println((millis() - startMilliseconds) / ONE_SECOND);
-      delay(ONE_SECOND * 5);
-    }
+    doConnect();
   }
   doSendMessage();
+}
+
+void doConnect() {
+  Serial.println("Connecting/activating.");
+  startMilliseconds = millis();
+  isConnected = modem.joinOTAA(appEui, appKey);
+  if (!isConnected) {
+    Serial.println("Something went wrong. Are you indoors? Move near a window and retry."); 
+    Serial.println("Waiting before trying again.");
+    delay(long(ONE_SECOND) * 90);
+  } else {
+    Serial.println("Connected. Waiting 5 seconds.");
+    Serial.println((millis() - startMilliseconds) / ONE_SECOND);
+    delay(ONE_SECOND * 5);
+  }
 }
 
 void doSendMessage() {
