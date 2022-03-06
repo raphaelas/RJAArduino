@@ -63,6 +63,7 @@ void doSendMessage() {
     Serial.println("Error sending message :(");
   }
   Serial.println(err);
+  Serial.println("Waiting 2 minutes before retry allowed.");
   delay(long(ONE_SECOND) * 120);
   Serial.println("Now you can try again.");
   while (digitalRead(RETRY_SWITCH) == LOW);
