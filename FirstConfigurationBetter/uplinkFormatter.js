@@ -5,7 +5,7 @@ function decodeUplink(input) {
   } 
   return {
     data: {
-      message: result
+      message: result,
     },
     warnings: [],
     errors: []
