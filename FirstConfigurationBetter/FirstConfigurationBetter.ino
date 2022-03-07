@@ -10,15 +10,12 @@ LoRaModem modem;
 const String appEui = "0000000000000000";
 
 const int RETRY_SWITCH = 7;
-const int mode = 1;
 const char ARDUINO_CURRENT_VERSION[] = "ARD-078 1.2.3";
 
 const int LORA_PORT = 3;
 const char * HELLO_WORLD_MESSAGE = "HelLoRA world!";
 
 bool isConnected = false;
-
-// Remember to 
 
 void setup() {
   pinMode(RETRY_SWITCH, INPUT);

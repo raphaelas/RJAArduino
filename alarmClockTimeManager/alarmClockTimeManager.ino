@@ -1,20 +1,60 @@
+#include <MKRWAN.h>
 #include <SPI.h>
 #include <SD.h>
 #include "alarmClockTimeManagerGlobalVariables.h"
 #include "sdcardconstants.h"
 #include "alarmclocktimemanagertimeconstants.h"
+#include "credentials.h"
+
+LoRaModem modem;
+
+const String appEui = "0000000000000000";
+const int LORA_PORT = 3;
+const char * TUNE_REQUEST = "tuneplease";
+bool isLoraConnected = false;
+long lastLoRaAction = -SECONDS_IN_MINUTE * 2;
 
 const int TIME_INCREASE_SWITCH = 7;
 const int TIME_DECREASE_SWITCH = 9;
+const int EXTERNAL_LED = 12;
+
+
+
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(TIME_INCREASE_SWITCH, INPUT);
   pinMode(TIME_DECREASE_SWITCH, INPUT);
+  pinMode(EXTERNAL_LED, OUTPUT);
   setUpSerialCommunicators();
+  setUpLoRa();
+}
+
+
+long negativeSafeModulo(long k, long n) {
+    return ((k %= n) < 0) ? k + n : k;
+}
+
+void setUpLoRa() {
+  if (!modem.begin(US915)) {
+    Serial.println("Failed to start modem. Did you select your region?");
+    while (true) {
+      alternateLight(LED_BUILTIN, ONE_SECOND * 2);
+    }
+  };
+}
+
+void alternateLight(int ledPin, int lightTime) {
+  digitalWrite(ledPin, HIGH);
+  delay(lightTime);
+  digitalWrite(ledPin, LOW);
+  delay(lightTime);  
 }
 
 void loop() {
+  if (!isLoraConnected && !loRaActionRecentlyPerformed()) {
+    doConnectLoRaWAN();
+  }
   if (!alreadyInitializedSdCard) {
     initializeSdCard();
     alreadyInitializedSdCard = true;
@@ -25,8 +65,9 @@ void loop() {
     writeNewDayToFile();
   }
   listenForTriggerFromOtherArduino();
-  checkTimeIncreaseSwitchState();
-  checkTimeDecreaseSwitchState();
+  checkBothSwitchesPressedState();
+  checkTimeIncreaseOnlySwitchState();
+  checkTimeDecreaseOnlySwitchState();
   if (!alreadySentTimeToSerial1) {
     sendTimeToOtherArduino();
   } else if (!alreadySentDayToSerial1) {
@@ -167,7 +208,7 @@ void sendDayToOtherArduino() {
 void listenForTriggerFromOtherArduino() {
   if (Serial1.available()) {
     String requestFromOtherArduino = Serial1.readString();
-    blinkOnboardLed();
+    blinkLight(LED_BUILTIN);
     Serial.println(requestFromOtherArduino);
     if (requestFromOtherArduino.equals("timeplease")) {
       alreadySentTimeToSerial1 = false;
@@ -177,50 +218,110 @@ void listenForTriggerFromOtherArduino() {
   }
 }
 
-void blinkOnboardLed() {
-  digitalWrite(LED_BUILTIN, HIGH);
+void blinkLight(int ledPin) {
+  digitalWrite(ledPin, HIGH);
   delay(BUILTIN_LED_ON_TIME);
-  digitalWrite(LED_BUILTIN, LOW);
+  digitalWrite(ledPin, LOW);
 }
 
-void checkTimeIncreaseSwitchState() {
-  int timeIncreaseSwitchState = digitalRead(TIME_INCREASE_SWITCH);
-  if (timeIncreaseSwitchState == HIGH) {
+bool loRaActionRecentlyPerformed() {
+  bool result = (millis() / ONE_SECOND) < (lastLoRaAction + (SECONDS_IN_MINUTE * 2));
+  if (result) {
+    alternateLight(EXTERNAL_LED, ONE_SECOND);
+  }
+  return result;
+}
+
+void doConnectLoRaWAN() {
+  Serial.println("Connecting via LoRaWAN.");
+  long startMilliseconds = millis();
+  digitalWrite(EXTERNAL_LED, HIGH);
+  isLoraConnected = modem.joinOTAA(appEui, appKey, JOIN_TIMEOUT);
+  if (!isLoraConnected) {
+    Serial.println("Connection via LoRaWAN failed."); 
+  } else {
+    Serial.println("Connected.");
+    Serial.print("Connection seconds: ");
+    Serial.println((millis() - startMilliseconds) / ONE_SECOND);
+    lastLoRaAction = millis() / ONE_SECOND;
+    blinkLight(LED_BUILTIN);
+    digitalWrite(EXTERNAL_LED, LOW);
+  }
+}
+
+void doSendMessage() {
+  Serial.println("Sending message.");
+  digitalWrite(EXTERNAL_LED, HIGH);
+  modem.setPort(LORA_PORT);
+  modem.beginPacket();
+  modem.print(TUNE_REQUEST);
+  int err = modem.endPacket(false);
+  if (err > 0) {
+    Serial.println("Message sent correctly.");
+    lastLoRaAction = millis() / ONE_SECOND;
+    Serial.println("Retry allowed in 2 minutes.");
+    blinkLight(LED_BUILTIN);
+  } else {
+    Serial.println("Error sending message.");
+  }
+  Serial.print("Send code: ");
+  Serial.println(err);
+  digitalWrite(EXTERNAL_LED, LOW);
+}
+
+void checkBothSwitchesPressedState() {
+  if (!loRaActionRecentlyPerformed() && switchPressed(TIME_INCREASE_SWITCH)
+      && switchPressed(TIME_DECREASE_SWITCH)) {
+    doSendMessage();
+  }
+}
+
+void checkTimeIncreaseOnlySwitchState() {
+  while (switchPressed(TIME_INCREASE_SWITCH) && !switchPressed(TIME_DECREASE_SWITCH)) {
     timeChangeAmount++;
-  } else if (timeChangeAmount > 0) {
+  }
+  if (timeChangeAmount > 0) {
     changeTheTime(timeChangeAmount);
   }
 }
 
-void checkTimeDecreaseSwitchState() {
-  int timeDecreaseSwitchState = digitalRead(TIME_DECREASE_SWITCH);
-  if (timeDecreaseSwitchState == HIGH) {
+void checkTimeDecreaseOnlySwitchState() {
+  while (switchPressed(TIME_DECREASE_SWITCH) && !switchPressed(TIME_INCREASE_SWITCH)) {
     timeChangeAmount--;
-  } else if (timeChangeAmount < 0) {
+  }
+  if (timeChangeAmount < 0) {
     changeTheTime(timeChangeAmount);
   }
 }
 
-void changeTheTime(int timeChangeAmount) {
+bool switchPressed(int switchPin) {
+  return digitalRead(switchPin) == HIGH;
+}
+
+void changeTheTime(int theTimeChangeAmount) {
   long oldTime = readOldTime();
-  removeFile(ALARM_TIME_FILE_NAME);
-  long newTime = oldTime + (ONE_MINUTE * 10 * timeChangeAmount);
-  changeTime(newTime % ONE_DAY);
-  if (newTime >= ONE_DAY) {
-    shiftDay(1);
-  } else if (newTime < 0) {
-    shiftDay(-1);
+  if (oldTime > 0) {
+    removeFile(ALARM_TIME_FILE_NAME);
+    long newTime = oldTime + (ONE_MINUTE * 10 * theTimeChangeAmount);
+    changeTime(negativeSafeModulo(newTime, ONE_DAY));
+    if (newTime >= ONE_DAY) {
+      shiftDay(1);
+    } else if (newTime < 0) {
+      shiftDay(-1);
+    }
+    blinkLight(LED_BUILTIN);
   }
   timeChangeAmount = 0;
-  blinkOnboardLed();
 }
 
 void shiftDay(int dayDelta) {
   int oldDay = readOldDay();
-  removeFile(ALARM_DAY_FILE_NAME);
-  int newDay = oldDay + dayDelta;
-  int newDayWrappedAround = ((newDay - 1) % DAYS_IN_WEEK) + 1;
-  changeDay(newDayWrappedAround);
+  if (oldDay > 0) {
+    removeFile(ALARM_DAY_FILE_NAME);
+    int newDay = oldDay + dayDelta;
+    int newDayWrappedAround = (negativeSafeModulo((newDay - 1), DAYS_IN_WEEK)) + 1;
+    changeDay(newDayWrappedAround);   
+  }
 }
 
 void changeDay(int newDay) {
