@@ -3,15 +3,19 @@ runtime: org.gnome.Platform
 runtime-version: '41'
 sdk: org.gnome.Sdk
 command: timeuntilalarm.sh
+finish-args:
+     - --socket=x11
 modules:
   - name: timeuntilalarm
     buildsystem: simple
     build-commands:
       - install -D timeuntilalarm.sh /app/bin/timeuntilalarm.sh 
       - install -D timeuntilalarm.py /app/bin/timeuntilalarm.py
+      - install -D xsel /app/bin/xsel
     sources:
       - type: file
         path: timeuntilalarm.sh
       - type: file
         path: timeuntilalarm.py
-
+      - type: file
+        path: /usr/bin/xsel
