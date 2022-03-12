@@ -18,9 +18,6 @@ const int TIME_INCREASE_SWITCH = 7;
 const int TIME_DECREASE_SWITCH = 9;
 const int EXTERNAL_LED = 12;
 
-
-
-
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(TIME_INCREASE_SWITCH, INPUT);
@@ -28,27 +25,6 @@ void setup() {
   pinMode(EXTERNAL_LED, OUTPUT);
   setUpSerialCommunicators();
   setUpLoRa();
-}
-
-
-long negativeSafeModulo(long k, long n) {
-    return ((k %= n) < 0) ? k + n : k;
-}
-
-void setUpLoRa() {
-  if (!modem.begin(US915)) {
-    Serial.println("Failed to start modem. Did you select your region?");
-    while (true) {
-      alternateLight(LED_BUILTIN, ONE_SECOND * 2);
-    }
-  };
-}
-
-void alternateLight(int ledPin, int lightTime) {
-  digitalWrite(ledPin, HIGH);
-  delay(lightTime);
-  digitalWrite(ledPin, LOW);
-  delay(lightTime);  
 }
 
 void loop() {
@@ -73,6 +49,26 @@ void loop() {
   } else if (!alreadySentDayToSerial1) {
     sendDayToOtherArduino();
   }
+}
+
+long negativeSafeModulo(long k, long n) {
+    return ((k %= n) < 0) ? k + n : k;
+}
+
+void setUpLoRa() {
+  if (!modem.begin(US915)) {
+    Serial.println("Failed to start modem. Did you select your region?");
+    while (true) {
+      alternateLight(LED_BUILTIN, ONE_SECOND * 2);
+    }
+  };
+}
+
+void alternateLight(int ledPin, int lightTime) {
+  digitalWrite(ledPin, HIGH);
+  delay(lightTime);
+  digitalWrite(ledPin, LOW);
+  delay(lightTime);  
 }
 
 void printFileBeforeDeletingIt(String fileName) {
@@ -126,7 +122,6 @@ void setUpSerialCommunicators() {
 
 void writeNewTimeToFile() {
   if (!promptedForTime && !SD.exists(ALARM_TIME_FILE_NAME)) {
-    Serial.println("python /home/$USER/Arduino/timeuntilalarm.py");
     Serial.println("Enter a time:");
     promptedForTime = true;
   }
@@ -255,8 +250,8 @@ void doSendMessage() {
   modem.setPort(LORA_PORT);
   modem.beginPacket();
   modem.print(TUNE_REQUEST);
-  int err = modem.endPacket(false);
-  if (err > 0) {
+  int response = modem.endPacket(false);
+  if (response > 0) {
     Serial.println("Message sent correctly.");
     lastLoRaAction = millis() / ONE_SECOND;
     Serial.println("Retry allowed in 2 minutes.");
@@ -265,7 +260,7 @@ void doSendMessage() {
     Serial.println("Error sending message.");
   }
   Serial.print("Send code: ");
-  Serial.println(err);
+  Serial.println(response);
   digitalWrite(EXTERNAL_LED, LOW);
 }
 
@@ -275,8 +270,6 @@ void checkBothSwitchesPressedState() {
     doSendMessage();
   }
 }
-
-const int DELAY_WHILE_PRESSING_TIME_CHANGE_BUTTON = 25;
 
 void checkTimeIncreaseOnlySwitchState() {
   while (switchPressed(TIME_INCREASE_SWITCH) && !switchPressed(TIME_DECREASE_SWITCH)) {

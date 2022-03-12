@@ -1,3 +1,4 @@
-flatpak-builder dist com.raphaelastrow.timeuntilalarm.yml
-flatpak-builder --user --install --force-clean dist com.raphaelastrow.timeuntilalarm.yml
-flatpak run com.raphaelastrow.timeuntilalarm
+MYNAME=raphaelastrow
+flatpak-builder dist com.$MYNAME.timeuntilalarm.yml
+flatpak-builder --user --install --force-clean dist com.$MYNAME.timeuntilalarm.yml
+flatpak run com.$MYNAME.timeuntilalarm

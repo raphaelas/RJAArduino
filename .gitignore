@@ -37,3 +37,4 @@ V2FirstConfiguration
 credentials.h
 dist
 .flatpak-builder
+loRaWANProperties.sh

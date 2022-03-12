@@ -64,14 +64,14 @@ void doSendMessage() {
   modem.setPort(LORA_PORT);
   modem.beginPacket();
   modem.print(HELLO_WORLD_MESSAGE);
-  int err = modem.endPacket(false);
-  if (err > 0) {
+  int response = modem.endPacket(false);
+  if (response > 0) {
     Serial.println("Message sent correctly!");
   } else {
     Serial.println("Error sending message :(");
   }
   Serial.print("Send code: ");
-  Serial.println(err);
+  Serial.println(response);
   Serial.println("Waiting 2 minutes before retry allowed.");
   delay(ONE_MINUTE * 2);
   Serial.println("Now you can try again.");
