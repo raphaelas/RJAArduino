@@ -35,3 +35,5 @@ ArduinoGraphics
 Arduino-Scheduler
 V2FirstConfiguration
 credentials.h
+dist
+.flatpak-builder

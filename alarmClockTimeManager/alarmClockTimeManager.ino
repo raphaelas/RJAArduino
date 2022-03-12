@@ -276,9 +276,15 @@ void checkBothSwitchesPressedState() {
   }
 }
 
+const int DELAY_WHILE_PRESSING_TIME_CHANGE_BUTTON = 25;
+
 void checkTimeIncreaseOnlySwitchState() {
   while (switchPressed(TIME_INCREASE_SWITCH) && !switchPressed(TIME_DECREASE_SWITCH)) {
     timeChangeAmount++;
+    delay(DELAY_WHILE_PRESSING_TIME_CHANGE_BUTTON);
+  }
+  if (switchPressed(TIME_INCREASE_SWITCH) && switchPressed(TIME_DECREASE_SWITCH)) {
+    timeChangeAmount = 0;
   }
   if (timeChangeAmount > 0) {
     changeTheTime(timeChangeAmount);
@@ -288,6 +294,10 @@ void checkTimeIncreaseOnlySwitchState() {
 void checkTimeDecreaseOnlySwitchState() {
   while (switchPressed(TIME_DECREASE_SWITCH) && !switchPressed(TIME_INCREASE_SWITCH)) {
     timeChangeAmount--;
+    delay(DELAY_WHILE_PRESSING_TIME_CHANGE_BUTTON);
+  }
+  if (switchPressed(TIME_INCREASE_SWITCH) && switchPressed(TIME_DECREASE_SWITCH)) {
+    timeChangeAmount = 0;
   }
   if (timeChangeAmount < 0) {
     changeTheTime(timeChangeAmount);

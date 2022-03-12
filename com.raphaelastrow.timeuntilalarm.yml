@@ -1,0 +1,17 @@
+app-id: com.raphaelastrow.timeuntilalarm
+runtime: org.gnome.Platform
+runtime-version: '41'
+sdk: org.gnome.Sdk
+command: timeuntilalarm.sh
+modules:
+  - name: timeuntilalarm
+    buildsystem: simple
+    build-commands:
+      - install -D timeuntilalarm.sh /app/bin/timeuntilalarm.sh 
+      - install -D timeuntilalarm.py /app/bin/timeuntilalarm.py
+    sources:
+      - type: file
+        path: timeuntilalarm.sh
+      - type: file
+        path: timeuntilalarm.py
+
