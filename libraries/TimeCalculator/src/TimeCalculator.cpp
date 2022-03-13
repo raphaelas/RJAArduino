@@ -10,8 +10,8 @@ TimeCalculator::TimeCalculator(long timeUntilWakeup, int startingDay) {
 
 bool TimeCalculator::isTimeToSoundAlarm(bool isHoliday) {
   long currentMillisecondsWithinDay = millis() % ONE_DAY;
-  long oneMinuteAfterWakeup = timeUntilWakeup + ONE_MINUTE;
-  return currentMillisecondsWithinDay >= timeUntilWakeup && currentMillisecondsWithinDay < oneMinuteAfterWakeup
+  long alarmTimePlusAlarmDuration = timeUntilWakeup + ALARM_DURATION;
+  return currentMillisecondsWithinDay >= timeUntilWakeup && currentMillisecondsWithinDay < alarmTimePlusAlarmDuration
          && !dayIsWeekendDay() && !isHoliday;
 }
 
@@ -54,7 +54,7 @@ void TimeCalculator::setDay(int startingDay) {
 
 int TimeCalculator::calculateDayOfWeek() {
   int mathUsableStartingDay = startingDay - 1;
-  int incrementDayTimeUntilWakeupHasPassed = (millis() % ONE_DAY) > timeUntilWakeup ? 1 : 0;
+  int incrementDayTimeUntilWakeupHasPassed = (millis() % ONE_DAY) > (timeUntilWakeup + ALARM_DURATION) ? 1 : 0;
   int startingDayMinusOne = (mathUsableStartingDay + (millis() / ONE_DAY) + incrementDayTimeUntilWakeupHasPassed) % DAYS_IN_WEEK;
   return startingDayMinusOne + 1;
 }
