@@ -5,18 +5,20 @@
 #include "sdcardconstants.h"
 #include "alarmclocktimemanagertimeconstants.h"
 #include "credentials.h"
+#include <Scheduler.h>
 
 LoRaModem modem;
 
 const String appEui = "0000000000000000";
 const int LORA_PORT = 3;
 const char * TUNE_REQUEST = "tuneplease";
-bool isLoraConnected = false;
+bool isLoRaConnected = false;
 long lastLoRaAction = -SECONDS_IN_MINUTE * 2;
 
 const int TIME_INCREASE_SWITCH = 7;
 const int TIME_DECREASE_SWITCH = 9;
 const int EXTERNAL_LED = 12;
+bool isTryingToJoinLoRaWAN = false;
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
@@ -25,12 +27,19 @@ void setup() {
   pinMode(EXTERNAL_LED, OUTPUT);
   setUpSerialCommunicators();
   setUpLoRa();
+  Scheduler.start(loRaWANLoop);
+}
+
+void loRaWANLoop() {
+  if (!isLoRaConnected && !isTryingToJoinLoRaWAN) {
+    isTryingToJoinLoRaWAN = true;
+    doConnectLoRaWAN();
+    isTryingToJoinLoRaWAN = false;
+  }
+  yield();
 }
 
 void loop() {
-  if (!isLoraConnected && !loRaActionRecentlyPerformed()) {
-    doConnectLoRaWAN();
-  }
   if (!alreadyInitializedSdCard) {
     initializeSdCard();
     alreadyInitializedSdCard = true;
@@ -49,6 +58,7 @@ void loop() {
   } else if (!alreadySentDayToSerial1) {
     sendDayToOtherArduino();
   }
+  yield();
 }
 
 long negativeSafeModulo(long k, long n) {
@@ -231,8 +241,8 @@ void doConnectLoRaWAN() {
   Serial.println("Connecting via LoRaWAN.");
   long startMilliseconds = millis();
   digitalWrite(EXTERNAL_LED, HIGH);
-  isLoraConnected = modem.joinOTAA(appEui, appKey, JOIN_TIMEOUT);
-  if (!isLoraConnected) {
+  isLoRaConnected = modem.joinOTAA(appEui, appKey, JOIN_TIMEOUT);
+  if (!isLoRaConnected) {
     Serial.println("Connection via LoRaWAN failed."); 
   } else {
     Serial.println("Connected.");
