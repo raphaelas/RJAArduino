@@ -42,3 +42,4 @@ graphicstest
 Adafruit_ST7735_and_ST7789_Library
 Adafruit_seesaw_Library
 metrom0tft
+.env
