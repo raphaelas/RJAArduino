@@ -155,9 +155,9 @@ void listenToUpdateDaySwitch() {
     lightManager.blinkLight(lightManager.getPowerbankLight(isTimeLeftForPowerbank), BRIEF_MOMENT);
     serialManager.sendMessage(DAY_REQUEST);
     delay(DELAY_BETWEEN_SWITCH_LISTENS);
-    int serialDayIn = serialManager.parseMessage();
+    int8_t serialDayIn = serialManager.parseMessage();
     if (serialDayIn > 0) {
-      int startingDay = serialDayIn;
+      int8_t startingDay = serialDayIn;
       timeCalculator.setDay(startingDay);
       lightManager.blinkLight(DAY_IS_BEING_SET_LED, BRIEF_MOMENT);
       keepSoundingAlarmClock = true;

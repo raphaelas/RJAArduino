@@ -14,9 +14,9 @@ class TimeCalculator {
     bool isTimeLeftForPowerbank(int powerbankChargedIteration, long powerbankChargedCheckpoint);
     int getDayNumber();
     void setTime(long timeUntilWakeup);
-    void setDay(int startingDay);
+    void setDay(int8_t startingDay);
     volatile long timeUntilWakeup;
-    volatile int startingDay;
+    volatile int8_t startingDay;
   private:
     int calculateDayOfWeek();
 

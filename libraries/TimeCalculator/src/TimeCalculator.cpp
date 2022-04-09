@@ -52,7 +52,7 @@ void TimeCalculator::setTime(long timeUntilWakeup) {
 
 }
 
-void TimeCalculator::setDay(int startingDay) {
+void TimeCalculator::setDay(int8_t startingDay) {
   this->startingDay = startingDay;
 }
 
