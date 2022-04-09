@@ -2,6 +2,7 @@
 #include "weekdays.h"
 #include "timeconstants.h"
 #include "tonealarmclockstructs.h"
+#include <util/atomic.h>
 
 TimeCalculator::TimeCalculator(long timeUntilWakeup, int startingDay) {
   this->timeUntilWakeup = timeUntilWakeup;
@@ -45,7 +46,10 @@ int TimeCalculator::getDayNumber() {
 }
 
 void TimeCalculator::setTime(long timeUntilWakeup) {
-  this->timeUntilWakeup = timeUntilWakeup;
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    this->timeUntilWakeup = timeUntilWakeup;
+  }
+
 }
 
 void TimeCalculator::setDay(int startingDay) {

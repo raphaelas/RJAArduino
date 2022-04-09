@@ -9,7 +9,7 @@
 
 LoRaModem modem;
 
-const String appEui = "0000000000000000";
+const char * appEui = "0000000000000000";
 const int LORA_PORT = 3;
 const char * TUNE_REQUEST = "tuneplease";
 bool isLoRaConnected = false;
@@ -27,7 +27,7 @@ void setup() {
   pinMode(EXTERNAL_LED, OUTPUT);
   setUpSerialCommunicators();
   setUpLoRa();
-  Scheduler.start(loRaWANLoop);
+  Scheduler.startLoop(loRaWANLoop);
 }
 
 void loRaWANLoop() {
@@ -81,7 +81,7 @@ void alternateLight(int ledPin, int lightTime) {
   delay(lightTime);  
 }
 
-void printFileBeforeDeletingIt(String fileName) {
+void printFileBeforeDeletingIt(char * fileName) {
   File dataFile = SD.open(fileName);
   if (dataFile) {
     while (dataFile.available()) {
@@ -90,16 +90,18 @@ void printFileBeforeDeletingIt(String fileName) {
     dataFile.close();
   }
   else {
-    Serial.println("error opening " + fileName);
+    Serial.print("error opening ");
+    Serial.println(fileName);
   }
 }
 
-void removeFile(String fileName) {
+void removeFile(char * fileName) {
   bool removalResult = SD.remove(fileName);
   Serial.println("Removal result: ");
   Serial.println(removalResult);    
   if (!SD.exists(fileName)) {
-    Serial.println(fileName + " does not exist anymore.");
+    Serial.print(fileName);
+    Serial.println(" does not exist anymore.");
   }
 }
 
@@ -112,13 +114,15 @@ void initializeSdCard() {
     delay(ONE_SECOND);   
   } else if (Serial) {
     for (int file = 0; file < FILE_COUNT; file++) {
-      String fileName = FILES_TO_REMOVE[file];
+      char * fileName = FILES_TO_REMOVE[file];
       if (SD.exists(fileName)) {
-        Serial.println(fileName + " exists.");
+        Serial.print(fileName);
+        Serial.println(" exists.");
         printFileBeforeDeletingIt(fileName);
         removeFile(fileName);
       } else {
-        Serial.println(fileName + " does not exist.");
+        Serial.print(fileName);
+        Serial.println(" does not exist.");
       }
     }
   }

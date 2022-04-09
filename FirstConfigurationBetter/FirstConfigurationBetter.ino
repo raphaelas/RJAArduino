@@ -7,7 +7,7 @@
 
 LoRaModem modem;
 
-const String appEui = "0000000000000000";
+const char * appEui = "0000000000000000";
 
 const int RETRY_SWITCH = 7;
 const char ARDUINO_CURRENT_VERSION[] = "ARD-078 1.2.3";

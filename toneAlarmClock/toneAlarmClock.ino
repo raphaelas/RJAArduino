@@ -101,7 +101,13 @@ void checkStopAlarmOrSetHolidaySwitchState() {
         int dayNumber = timeCalculator.getDayNumber();
         hebrewCharacterWriter.writeChagSameach(dayNumber);
       } else {
-        updateTimeUntilAlarm();
+        bool shouldWriteSofShavuahTov = timeCalculator.dayIsWeekendDay();
+        if (shouldWriteSofShavuahTov) {
+          hebrewCharacterWriter.writeSofShavuahTov();
+          hasWrittenSofShavuahTov = true;
+        } else {
+          updateTimeUntilAlarm();
+        }
       }
     }
     delay(DELAY_BETWEEN_SWITCH_LISTENS);

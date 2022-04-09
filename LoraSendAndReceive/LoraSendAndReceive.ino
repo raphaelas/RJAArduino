@@ -8,7 +8,7 @@ void setup() {
   while (!Serial);
   // change this to your regional band (eg. US915, AS923, ...)
   if (!modem.begin(US915)) {
-    Serial.println("Failed to start module");
+    Serial.println("Failed to start module. Did you select your region?");
     while (true);
   };
   // Set poll interval to 60 secs.
@@ -19,32 +19,32 @@ void setup() {
 }
 
 void loop() {
-  Serial.println();
-  Serial.println("Enter a message to send to network");
-  Serial.println("(make sure that end-of-line 'NL' is enabled)");
-
-  while (!Serial.available());
-  String msg = Serial.readStringUntil('\n');
-
-  Serial.println();
-  Serial.print("Sending: " + msg + " - ");
-  for (unsigned int i = 0; i < msg.length(); i++) {
-    Serial.print(msg[i] >> 4, HEX);
-    Serial.print(msg[i] & 0xF, HEX);
-    Serial.print(" ");
-  }
-  Serial.println();
-
-  modem.beginPacket();
-  modem.print(msg);
-  int err = modem.endPacket(true);
-  if (err > 0) {
-    Serial.println("Message sent correctly!");
-  } else {
-    Serial.println("Error sending message :(");
-    Serial.println("(you may send a limited amount of messages per minute, depending on the signal strength");
-    Serial.println("it may vary from 1 message every couple of seconds to 1 message every minute)");
-  }
+//  Serial.println();
+//  Serial.println("Enter a message to send to network");
+//  Serial.println("(make sure that end-of-line 'NL' is enabled)");
+//
+//  while (!Serial.available());
+//  String msg = Serial.readStringUntil('\n');
+//
+//  Serial.println();
+//  Serial.print("Sending: " + msg + " - ");
+//  for (unsigned int i = 0; i < msg.length(); i++) {
+//    Serial.print(msg[i] >> 4, HEX);
+//    Serial.print(msg[i] & 0xF, HEX);
+//    Serial.print(" ");
+//  }
+//  Serial.println();
+//
+//  modem.beginPacket();
+//  modem.print(msg);
+//  int err = modem.endPacket(true);
+//  if (err > 0) {
+//    Serial.println("Message sent correctly!");
+//  } else {
+//    Serial.println("Error sending message :(");
+//    Serial.println("(you may send a limited amount of messages per minute, depending on the signal strength");
+//    Serial.println("it may vary from 1 message every couple of seconds to 1 message every minute)");
+//  }
   delay(1000);
   if (!modem.available()) {
     Serial.println("No downlink message received at this time.");

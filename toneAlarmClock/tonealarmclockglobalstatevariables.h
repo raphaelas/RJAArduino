@@ -1,4 +1,4 @@
-bool keepSoundingAlarmClock = true;
+volatile bool keepSoundingAlarmClock = true;
 bool hasWrittenBokerTov = false;
 bool hasWrittenSofShavuahTov = false;
 bool hasWrittenChagSameach = false;

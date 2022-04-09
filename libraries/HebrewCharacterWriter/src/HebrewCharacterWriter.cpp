@@ -19,7 +19,6 @@ void HebrewCharacterWriter::writeTimeLeftUntilAlarmToLcd(HoursMinutesDuration ho
   lcd->begin(16, 2);
   lcd->clear();
   lcd->setCursor(14, 0);
-  int minutesCursor;
   if (hoursLeftUntilAlarm > 0) {
     lcd->print(hoursLeftUntilAlarm);
     bool singularHours = (hoursLeftUntilAlarm == 1);

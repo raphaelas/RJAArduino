@@ -15,8 +15,8 @@ class TimeCalculator {
     int getDayNumber();
     void setTime(long timeUntilWakeup);
     void setDay(int startingDay);
-    long timeUntilWakeup;
-    int startingDay;
+    volatile long timeUntilWakeup;
+    volatile int startingDay;
   private:
     int calculateDayOfWeek();
 

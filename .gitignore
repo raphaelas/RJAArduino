@@ -43,3 +43,14 @@ Adafruit_ST7735_and_ST7789_Library
 Adafruit_seesaw_Library
 metrom0tft
 .env
+Dictionary
+.idea
+Adafruit_EPD
+Adafruit_HX8357_Library
+Adafruit_ImageReader_Library
+Adafruit_NeoPixel
+Adafruit_SPIFlash
+Adafruit_SSD1331_OLED_Driver_Library_for_Arduino
+Adafruit_SSD1351_library
+CMakeLists.txt
+SdFat_-_Adafruit_Fork
